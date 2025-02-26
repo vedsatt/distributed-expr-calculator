@@ -1,6 +1,6 @@
 package ast
 
-// модуль, преобразующий строку-выражение в ast дерево
+// модуль, преобразующий строку-выражение в список задач на основе ast
 
 import (
 	"fmt"
@@ -14,6 +14,16 @@ type astNode struct {
 	operator string
 	left     *astNode
 	right    *astNode
+}
+
+type Task struct {
+	ID           string
+	Type         string
+	Operator     string
+	Arg1         interface{}
+	Arg2         interface{}
+	Dependencies []string
+	Status       string
 }
 
 type stack []*token
@@ -70,6 +80,48 @@ func typeCheck(symbol string) bool {
 	}
 
 	return r.MatchString(string(symbol))
+}
+
+func createList(astRoot *astNode) *[]Task {
+	var tasks []Task
+	id := 0
+
+	createTasks(astRoot, &id, &tasks)
+
+	return &tasks
+}
+
+func createTasks(node *astNode, taskID *int, tasks *[]Task) string {
+	if node.astType == "number" {
+		// создаем задачу для числа
+		task := Task{
+			ID:     fmt.Sprintf("t%d", *taskID),
+			Type:   "number",
+			Arg1:   node.operator,
+			Status: "done",
+		}
+		*tasks = append(*tasks, task)
+		*taskID++
+		return task.ID
+	}
+
+	// рекурсивно создаем задачи для левого и правого поддерева
+	leftID := createTasks(node.left, taskID, tasks)
+	rightID := createTasks(node.right, taskID, tasks)
+
+	// создаем задачу для операции
+	task := Task{
+		ID:           fmt.Sprintf("t%d", *taskID),
+		Type:         "operation",
+		Operator:     node.operator,
+		Arg1:         leftID,
+		Arg2:         rightID,
+		Dependencies: []string{leftID, rightID},
+		Status:       "ready",
+	}
+	*tasks = append(*tasks, task)
+	*taskID++
+	return task.ID
 }
 
 func ast(tokens []*token) (*astNode, error) {
@@ -197,7 +249,6 @@ func rpn(tokens []*token) ([]*token, error) {
 func tokens(str string) []*token {
 	tokens := make([]*token, 0)
 
-	str = strings.ReplaceAll(str, " ", "") // избавляемся от пробелов
 	i := 0
 	for i < len(str) {
 		switch {
@@ -229,26 +280,82 @@ func tokens(str string) []*token {
 	return tokens
 }
 
-func pre_order(node *astNode) {
-	if node != nil {
-		fmt.Println(node)
-		pre_order(node.left)
-		pre_order(node.right)
+// первоначальная проверка на ошибки
+// сильно понижает шанс пропустить ошибку в выражении
+func expErr(expression string) error {
+	len := len(expression)
+	flag := false
+	start := 0
+	end := 0
+
+	for i := 0; i < len; i++ {
+		curr := expression[i]
+		next := byte(0)
+		if i < len-1 {
+			next = expression[i+1]
+		}
+
+		if curr == '(' {
+			start++
+		}
+		if curr == ')' {
+			end++
+		}
+		if 48 <= curr && curr <= 57 && !flag {
+			flag = true
+		}
+
+		switch {
+		case i == 0 && (curr == ')' || curr == '*' || curr == '+' || curr == '-' || curr == '/'):
+			return ErrOperatorFirst
+		case i == len-1 && (curr == '(' || curr == '*' || curr == '+' || curr == '-' || curr == '/'):
+			return ErrOperatorLast
+		case curr == '(' && next == ')':
+			return ErrEmptyBrackets
+		case curr == ')' && next == '(':
+			return ErrMergedBrackets
+		case (curr == '*' || curr == '+' || curr == '-' || curr == '/') && (next == '*' || next == '+' || next == '-' || next == '/'):
+			return ErrMergedOperators
+		case curr != ' ' && (curr < '(' || curr > '9'):
+			return ErrWrongCharacter
+		case len <= 2:
+			return ErrInvalidExpression
+		}
 	}
+
+	if start > end {
+		return ErrNotClosedBracket
+	} else if end > start {
+		return ErrNotOpenedBracket
+	}
+	if !flag {
+		return ErrNoOperators
+	}
+	return nil
 }
 
-func Build(str string) error {
-	tokens := tokens(str)
+func Build(expression string) (*[]Task, error) {
+	expression = strings.ReplaceAll(expression, " ", "") // избавляемся от пробелов
+
+	err := expErr(expression)
+	if err != nil {
+		return nil, err
+	}
+
+	tokens := tokens(expression)
+
 	rpn, err := rpn(tokens)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
 	astRoot, err := ast(rpn)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	pre_order(astRoot)
+	tasks := createList(astRoot)
+	fmt.Println(tasks)
 
-	return nil
+	return tasks, nil
 }
