@@ -1,29 +1,17 @@
 package ast
 
-// модуль, преобразующий строку-выражение в список задач на основе ast
+// модуль, преобразующий строку-выражение в ast
 
 import (
-	"fmt"
 	"log"
 	"regexp"
 	"strings"
 )
 
-type astNode struct {
-	astType  string
-	operator string
-	left     *astNode
-	right    *astNode
-}
-
-type Task struct {
-	ID           string
-	Type         string
-	Operator     string
-	Arg1         interface{}
-	Arg2         interface{}
-	Dependencies []string
-	Status       string
+// структура для первоначального разбиения строки на токены
+type token struct {
+	t   string // тип токена
+	val string // значение токена
 }
 
 type stack []*token
@@ -52,12 +40,6 @@ func (s *stack) len() int {
 	return len(*s)
 }
 
-// структура для первоначального разбиения строки на токены
-type token struct {
-	t   string // тип токена
-	val string // значение токена
-}
-
 func priority(op string) (int, error) {
 	switch {
 	case op == "/" || op == "*":
@@ -82,60 +64,44 @@ func typeCheck(symbol string) bool {
 	return r.MatchString(string(symbol))
 }
 
-func createList(astRoot *astNode) *[]Task {
-	var tasks []Task
+func createNode(id int, val string, left, right *AstNode) *AstNode {
+	node := &AstNode{
+		ID:      id,
+		AstType: "operation",
+		Value:   val,
+		Left:    left,
+		Right:   right,
+	}
+
+	switch val {
+	case "*":
+		node.OpTime = TIME_MULTIPLICATIONS_MS
+	case "/":
+		node.OpTime = TIME_DIVISIONS_MS
+	case "+":
+		node.OpTime = TIME_ADDITION_MS
+	case "-":
+		node.OpTime = TIME_SUBTRACTION_MS
+	}
+
+	return node
+}
+
+func ast(tokens []*token) (*AstNode, error) {
+	var stack []*AstNode
 	id := 0
-
-	createTasks(astRoot, &id, &tasks)
-
-	return &tasks
-}
-
-func createTasks(node *astNode, taskID *int, tasks *[]Task) string {
-	if node.astType == "number" {
-		// создаем задачу для числа
-		task := Task{
-			ID:     fmt.Sprintf("t%d", *taskID),
-			Type:   "number",
-			Arg1:   node.operator,
-			Status: "done",
-		}
-		*tasks = append(*tasks, task)
-		*taskID++
-		return task.ID
-	}
-
-	// рекурсивно создаем задачи для левого и правого поддерева
-	leftID := createTasks(node.left, taskID, tasks)
-	rightID := createTasks(node.right, taskID, tasks)
-
-	// создаем задачу для операции
-	task := Task{
-		ID:           fmt.Sprintf("t%d", *taskID),
-		Type:         "operation",
-		Operator:     node.operator,
-		Arg1:         leftID,
-		Arg2:         rightID,
-		Dependencies: []string{leftID, rightID},
-		Status:       "ready",
-	}
-	*tasks = append(*tasks, task)
-	*taskID++
-	return task.ID
-}
-
-func ast(tokens []*token) (*astNode, error) {
-	var stack []*astNode
 
 	for _, tok := range tokens {
 		switch tok.t {
 		case operand:
 			// создаем узел для числа
-			node := &astNode{
-				astType:  "number",
-				operator: tok.val,
+			node := &AstNode{
+				ID:      id,
+				AstType: "number",
+				Value:   tok.val,
 			}
 			stack = append(stack, node)
+			id++
 
 		case operator:
 			// один оператор - два операнда
@@ -149,13 +115,9 @@ func ast(tokens []*token) (*astNode, error) {
 			stack = stack[:len(stack)-2]
 
 			// создаем новый узел операции
-			node := &astNode{
-				astType:  "operation",
-				operator: tok.val,
-				left:     left,
-				right:    right,
-			}
+			node := createNode(id, tok.val, left, right)
 			stack = append(stack, node)
+			id++
 
 		default:
 			return nil, ErrWrongCharacter
@@ -281,7 +243,7 @@ func tokens(str string) []*token {
 }
 
 // первоначальная проверка на ошибки
-// сильно понижает шанс пропустить ошибку в выражении
+// понижает шанс пропустить ошибку в выражении
 func expErr(expression string) error {
 	len := len(expression)
 	flag := false
@@ -316,25 +278,29 @@ func expErr(expression string) error {
 			return ErrMergedBrackets
 		case (curr == '*' || curr == '+' || curr == '-' || curr == '/') && (next == '*' || next == '+' || next == '-' || next == '/'):
 			return ErrMergedOperators
-		case curr != ' ' && (curr < '(' || curr > '9'):
+		case curr < '(' || curr > '9':
 			return ErrWrongCharacter
 		case len <= 2:
 			return ErrInvalidExpression
+		case curr == '/' && next == '0':
+			return ErrDivisionByZero
 		}
 	}
 
+	// базовая проверка на корректность скобок
 	if start > end {
 		return ErrNotClosedBracket
 	} else if end > start {
 		return ErrNotOpenedBracket
 	}
+
 	if !flag {
 		return ErrNoOperators
 	}
 	return nil
 }
 
-func Build(expression string) (*[]Task, error) {
+func Build(expression string) (*AstNode, error) {
 	expression = strings.ReplaceAll(expression, " ", "") // избавляемся от пробелов
 
 	err := expErr(expression)
@@ -354,8 +320,5 @@ func Build(expression string) (*[]Task, error) {
 		return nil, err
 	}
 
-	tasks := createList(astRoot)
-	fmt.Println(tasks)
-
-	return tasks, nil
+	return astRoot, nil
 }
