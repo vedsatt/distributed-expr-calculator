@@ -90,6 +90,13 @@ func ExpressionHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Expression id: %v, zero division error detected", ast.ID)
 		base.UpdateData(ast.ID, 0, "zero devision error")
 
+		// очищаем мапу
+		// почему то, если переинициализвровать мапу, то ast.AstNode не будет распознаваться
+		// поэтому приходится вручную удалять каждый элемент
+		for k := range currTasks {
+			delete(currTasks, k)
+		}
+
 		// очищаем каналы
 		for len(tasks) > 0 {
 			<-tasks
@@ -97,6 +104,8 @@ func ExpressionHandler(w http.ResponseWriter, r *http.Request) {
 		for len(results) > 0 {
 			<-results
 		}
+		<-last_result
+
 		return
 	}
 

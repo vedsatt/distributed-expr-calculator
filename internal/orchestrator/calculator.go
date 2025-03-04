@@ -44,7 +44,7 @@ func calc(node *ast.AstNode) string {
 			}
 			log.Printf("id: %v, res: %v, err: %v", res.ID, res.Result, res.Error)
 			result = delete_and_update(res)
-			log.Println("updated tree")
+			log.Println("Updated tree with new result")
 		default:
 			if len(currTasks) == 0 {
 				last_result <- result
@@ -119,7 +119,7 @@ func delete_and_update(res Result) float64 {
 	node.AstType = "number"
 	node.Left = nil
 	node.Right = nil
-	log.Printf("updated node %v", node)
+	log.Printf("Updated node with id %d", node.ID)
 
 	// простая обработка финального значения выражения
 	if len(currTasks) == 1 {
