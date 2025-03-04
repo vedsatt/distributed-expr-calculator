@@ -43,7 +43,7 @@ func calc(node *ast.AstNode) string {
 				return res.Error
 			}
 			log.Printf("id: %v, res: %v, err: %v", res.ID, res.Result, res.Error)
-			result = delete_and_update(res)
+			result = deleteAndUpdate(res)
 			log.Println("Updated tree with new result")
 		default:
 			if len(currTasks) == 0 {
@@ -99,7 +99,7 @@ func fillMap(node *ast.AstNode) {
 	fillMap(node.Right)
 }
 
-func delete_and_update(res Result) float64 {
+func deleteAndUpdate(res Result) float64 {
 	// когда мы получаем результат ноды, мы удаляем ее листья, а потом меняем ноду на число для дальнейших вычислений
 	// так как мапа ссылается на ноду, то, взаимодействуя с элементом мапы, мы напрямую взаимодействуем с нодой
 
