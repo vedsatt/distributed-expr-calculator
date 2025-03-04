@@ -2,7 +2,6 @@ package ast
 
 import (
 	"errors"
-	"time"
 )
 
 var (
@@ -19,13 +18,6 @@ var (
 	ErrDivisionByZero    = errors.New("division by zero")
 	ErrUnknownOperator   = errors.New("unknown operator")
 	ErrEmptyStack        = errors.New("stack is empty")
-)
-
-var (
-	TIME_ADDITION_MS        time.Duration = 2 * time.Millisecond
-	TIME_SUBTRACTION_MS     time.Duration = 2 * time.Millisecond
-	TIME_MULTIPLICATIONS_MS time.Duration = 3 * time.Millisecond
-	TIME_DIVISIONS_MS       time.Duration = 3 * time.Millisecond
 )
 
 const (

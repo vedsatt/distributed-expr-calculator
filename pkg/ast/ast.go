@@ -1,17 +1,12 @@
 package ast
 
-import (
-	"time"
-)
-
 type AstNode struct {
-	ID       int           `json:"id"`
-	AstType  string        `json:"type"`
-	Value    string        `json:"operation"`
-	Left     *AstNode      `json:"arg1"`
-	Right    *AstNode      `json:"arg2"`
-	Counting bool          `json:"status"`
-	OpTime   time.Duration `json:"operation_time"`
+	ID       int      `json:"id"`
+	AstType  string   `json:"type"`
+	Value    string   `json:"operation"`
+	Left     *AstNode `json:"arg1"`
+	Right    *AstNode `json:"arg2"`
+	Counting bool     `json:"status"`
 }
 
 func priority(op string) (int, error) {
@@ -25,29 +20,6 @@ func priority(op string) (int, error) {
 	default:
 		return 0, ErrUnknownOperator
 	}
-}
-
-func createNode(id int, val string, left, right *AstNode) *AstNode {
-	node := &AstNode{
-		ID:      id,
-		AstType: "operation",
-		Value:   val,
-		Left:    left,
-		Right:   right,
-	}
-
-	switch val {
-	case "*":
-		node.OpTime = TIME_MULTIPLICATIONS_MS
-	case "/":
-		node.OpTime = TIME_DIVISIONS_MS
-	case "+":
-		node.OpTime = TIME_ADDITION_MS
-	case "-":
-		node.OpTime = TIME_SUBTRACTION_MS
-	}
-
-	return node
 }
 
 func ast(tokens []*token) (*AstNode, error) {
@@ -78,7 +50,13 @@ func ast(tokens []*token) (*AstNode, error) {
 			stack = stack[:len(stack)-2]
 
 			// создаем новый узел операции для оператора
-			node := createNode(id, tok.val, left, right)
+			node := &AstNode{
+				ID:      id,
+				AstType: "operation",
+				Value:   tok.val,
+				Left:    left,
+				Right:   right,
+			}
 			stack = append(stack, node)
 			id++
 

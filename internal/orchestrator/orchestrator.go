@@ -13,7 +13,8 @@ import (
 
 const port = ":8080"
 
-type Orchestrator struct{}
+type Orchestrator struct {
+}
 
 func New() *Orchestrator {
 	return &Orchestrator{}

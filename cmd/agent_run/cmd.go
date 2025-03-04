@@ -1,7 +1,13 @@
 package main
 
-import "github.com/vedsatt/calc_prl/internal/agent"
+import (
+	"github.com/vedsatt/calc_prl/internal/agent"
+	"github.com/vedsatt/calc_prl/internal/config"
+)
 
 func main() {
-	agent.Agent()
+	cfg := config.LoadConfig()
+
+	agent := agent.New(cfg)
+	agent.Run()
 }

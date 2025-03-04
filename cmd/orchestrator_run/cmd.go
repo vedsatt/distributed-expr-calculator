@@ -1,6 +1,8 @@
 package main
 
-import "github.com/vedsatt/calc_prl/internal/orchestrator"
+import (
+	"github.com/vedsatt/calc_prl/internal/orchestrator"
+)
 
 func main() {
 	app := orchestrator.New()

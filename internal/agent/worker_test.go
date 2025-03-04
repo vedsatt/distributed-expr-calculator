@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/vedsatt/calc_prl/internal/config"
 	"github.com/vedsatt/calc_prl/pkg/ast"
 )
 
@@ -133,7 +134,7 @@ func TestCalculate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result, err := calculate(tt.a, tt.b, tt.operator)
+		result, err := calculate(tt.a, tt.b, tt.operator, config.Config{})
 		if result != tt.expected || err != tt.expected_err {
 			t.Errorf("calculate(%s, %s, %s) = %v; expected %v, expected err: %s", tt.a, tt.b, tt.operator, result, tt.expected, err)
 		}
@@ -175,6 +176,6 @@ func TestWorker(t *testing.T) {
 	baseURL = server.URL
 	defer func() { baseURL = oldBaseURL }() // восстанавливаем значение после теста
 
-	go worker()
+	go worker(config.Config{})
 	time.Sleep(5 * time.Second) // Даем время воркеру выполнить свою работу
 }
