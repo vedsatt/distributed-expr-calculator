@@ -5,16 +5,6 @@ import (
 	"time"
 )
 
-type AstNode struct {
-	ID       int           `json:"id"`
-	AstType  string        `json:"type"`
-	Value    string        `json:"operation"`
-	Left     *AstNode      `json:"arg1"`
-	Right    *AstNode      `json:"arg2"`
-	Counting bool          `json:"status"`
-	OpTime   time.Duration `json:"operation_time"`
-}
-
 var (
 	ErrOperatorFirst     = errors.New("the first character is the operator")
 	ErrOperatorLast      = errors.New("the last character is the operator")
