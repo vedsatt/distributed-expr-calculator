@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"regexp"
 	"sync"
 
 	"github.com/vedsatt/calc_prl/pkg/ast"
@@ -50,6 +51,12 @@ func errorResponse(w http.ResponseWriter, err string, statusCode int) {
 	e := Error{Res: err}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(e)
+}
+
+func checkId(id string) bool {
+	pattern := "^[0-9]+$"
+	r := regexp.MustCompile(pattern)
+	return r.MatchString(id)
 }
 
 func (o *Orchestrator) Run() {

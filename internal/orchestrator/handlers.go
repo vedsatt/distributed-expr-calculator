@@ -114,7 +114,8 @@ func ExpressionHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetDataHandler(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/expressions/:")
-	if id != "" {
+	fmt.Println(id)
+	if checkId(id) {
 		id_int, err := strconv.Atoi(id)
 		if err != nil {
 			err_str := fmt.Sprintf("%s", err)
