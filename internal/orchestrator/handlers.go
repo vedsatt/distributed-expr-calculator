@@ -130,14 +130,15 @@ func GetDataHandler(w http.ResponseWriter, r *http.Request) {
 		id_int, err := strconv.Atoi(id)
 		if err != nil {
 			err_str := fmt.Sprintf("%s", err)
-			errorResponse(w, err_str, http.StatusUnprocessableEntity)
-			log.Printf("Code: %v, Unprocessable entity", http.StatusUnprocessableEntity)
+			errorResponse(w, err_str, http.StatusInternalServerError)
+			log.Printf("Code: %v, Internal server error", http.StatusInternalServerError)
 			return
 		}
 
 		data, err := base.GetExpression(id_int)
 		if err != nil {
-			errorResponse(w, fmt.Sprintf("%s", err), http.StatusUnprocessableEntity)
+			errorResponse(w, fmt.Sprintf("%s", err), http.StatusNotFound)
+			log.Printf("Code: %v, Expression was not found", http.StatusNotFound)
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -145,7 +146,7 @@ func GetDataHandler(w http.ResponseWriter, r *http.Request) {
 		_, err = w.Write([]byte(data))
 		if err != nil {
 			errorResponse(w, "error with json data", http.StatusInternalServerError)
-			log.Printf("Code: %v, Unprocessable entity", http.StatusInternalServerError)
+			log.Printf("Code: %v, Internal server error", http.StatusInternalServerError)
 			return
 		}
 		return
@@ -153,8 +154,8 @@ func GetDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	data, err := base.GetData()
 	if err != nil {
-		errorResponse(w, "empty base", http.StatusUnprocessableEntity)
-		log.Printf("Code: %v, Unprocessable entity", http.StatusInternalServerError)
+		errorResponse(w, "empty base", http.StatusInternalServerError)
+		log.Printf("Code: %v, Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -163,7 +164,7 @@ func GetDataHandler(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write([]byte(data))
 	if err != nil {
 		errorResponse(w, "error with json data", http.StatusInternalServerError)
-		log.Printf("Code: %v, Unprocessable entity", http.StatusInternalServerError)
+		log.Printf("Code: %v, Internal server error", http.StatusInternalServerError)
 		return
 	}
 }
