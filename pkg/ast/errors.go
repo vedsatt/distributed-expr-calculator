@@ -28,7 +28,7 @@ func expErr(expression string) error {
 		switch {
 		case i == 0 && (curr == ')' || curr == '*' || curr == '+' || curr == '-' || curr == '/'):
 			return ErrOperatorFirst
-		case i == len-1 && (curr == '(' || curr == '*' || curr == '+' || curr == '-' || curr == '/'):
+		case i == len-1 && (curr == '*' || curr == '+' || curr == '-' || curr == '/'):
 			return ErrOperatorLast
 		case curr == '(' && next == ')':
 			return ErrEmptyBrackets
