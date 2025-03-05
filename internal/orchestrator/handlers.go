@@ -22,7 +22,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 
 		duration := time.Since(start)
-		log.Printf("Method: %s, completion time: %s", r.Method, duration)
+		log.Printf("Method: %s, completion time: %v", r.Method, duration)
 	})
 }
 
@@ -51,27 +51,30 @@ func databaseMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		w.WriteHeader(http.StatusCreated)
-		log.Printf("adding expression to database")
+		// добавляем выражение в базу данных и получаем id
 		expKey := base.PostData()
+		w.WriteHeader(http.StatusCreated)
+		log.Printf("Adding expression to database")
 
 		w.Header().Set("Content-Type", "application/json")
 		id := RespID{Id: expKey}
 		json.NewEncoder(w).Encode(id)
 
-		// с помощью контекста закидываем выражение в некст хендлер
-		ast := &Ast{ID: expKey, Ast: astRoot}
-		ctx := context.WithValue(r.Context(), astKey, ast)
-		log.Printf("Adding AST: %v to ctx", *ast.Ast)
-		r = r.WithContext(ctx)
+		// запускаем вычисления в фоновом режиме
+		go func() {
+			// контекст нужен, чтобы передать выражение следующему хендлеру
+			ctx := context.Background()
+			ast := &Ast{ID: expKey, Ast: astRoot}
+			ctx = context.WithValue(ctx, astKey, ast)
+			log.Printf("Adding AST: %v to ctx", *ast.Ast)
+			req := r.WithContext(ctx)
 
-		next.ServeHTTP(w, r)
+			next.ServeHTTP(w, req)
+		}()
 	})
 }
 
 func ExpressionHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Method: %s, URL: %s", r.Method, r.URL)
-
 	ast, ok := r.Context().Value(astKey).(*Ast)
 	if !ok || ast.Ast == nil {
 		log.Printf("Error: unable to get AST from context")
@@ -81,10 +84,10 @@ func ExpressionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fillMap(ast.Ast)
-	log.Println("filled map")
+	log.Println("Filled map")
 
 	err := calc(ast.Ast)
-	log.Println("end calculating")
+	log.Println("End calculating expression")
 	if err != "" {
 		// сообщаем, что обнаружено деление на ноль
 		log.Printf("Expression id: %v, zero division error detected", ast.ID)
@@ -123,7 +126,6 @@ func ExpressionHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetDataHandler(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/expressions/:")
-	fmt.Println(id)
 	if checkId(id) {
 		id_int, err := strconv.Atoi(id)
 		if err != nil {
