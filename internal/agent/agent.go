@@ -2,6 +2,7 @@ package agent
 
 import (
 	"log"
+	"time"
 
 	"github.com/vedsatt/calc_prl/internal/config"
 )
@@ -16,10 +17,11 @@ func New(cfg config.Config) *Agent {
 }
 
 func (a *Agent) Run() {
-	for i := 0; i < a.config.ComputingPower; i++ {
-		log.Printf("worker %d starting", i+1)
+	for i := range a.config.ComputingPower {
+		time.Sleep(1 * time.Second)
+		log.Printf("worker %d starting...", i+1)
 		go worker(a.config)
 	}
 
-	select {} // бесконечное ожидание, решил без WaitGroup делать
+	select {} // бесконечное ожидание
 }

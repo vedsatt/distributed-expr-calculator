@@ -1,0 +1,16 @@
+services:
+  orchestrator:
+    build:
+      context: .
+      dockerfile: ./cmd/orchestrator/Dockerfile
+    container_name: orchestrator
+    ports:
+      - "8080:8080"
+
+  agent:
+    build:
+      context: .
+      dockerfile: ./cmd/agent/Dockerfile
+    container_name: agent
+    depends_on:
+      - orchestrator

@@ -23,7 +23,7 @@ func getTask() (*ast.AstNode, int) {
 		Timeout: 5 * time.Second, // Таймаут 5 секунд
 	}
 
-	resp, err := client.Get("http://localhost:8080/internal/task")
+	resp, err := client.Get("http://orchestrator:8080/internal/task")
 	if err != nil {
 		return nil, http.StatusInternalServerError // сервер недоступен
 	}
@@ -47,7 +47,7 @@ func sendResult(taskID int, result float64, err string) {
 	jsonData, _ := json.Marshal(data)
 
 	resp, er := http.Post(
-		"http://localhost:8080/internal/task",
+		"http://orchestrator:8080/internal/task",
 		"application/json",
 		bytes.NewBuffer(jsonData),
 	)
