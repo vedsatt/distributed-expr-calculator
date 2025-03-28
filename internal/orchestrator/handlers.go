@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vedsatt/calc_prl/internal/models"
 	"github.com/vedsatt/calc_prl/pkg/ast"
 )
 
@@ -182,7 +183,7 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 		}
 	case http.MethodPost:
-		var result Result
+		var result models.Result
 		json.NewDecoder(r.Body).Decode(&result)
 		results <- result
 

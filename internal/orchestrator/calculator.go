@@ -6,30 +6,24 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/vedsatt/calc_prl/pkg/ast"
+	"github.com/vedsatt/calc_prl/internal/models"
 )
 
-type Result struct {
-	ID     int     `json:"id"`
-	Result float64 `json:"result"`
-	Error  string  `json:"error"`
-}
-
 var (
-	tasks       chan *ast.AstNode
-	results     chan Result
+	tasks       chan *models.AstNode
+	results     chan models.Result
 	last_result chan float64
-	currTasks   map[int]*ast.AstNode
+	currTasks   map[int]*models.AstNode
 )
 
 func init() {
 	last_result = make(chan float64, 1)
-	tasks = make(chan *ast.AstNode)
-	results = make(chan Result)
-	currTasks = make(map[int]*ast.AstNode)
+	tasks = make(chan *models.AstNode)
+	results = make(chan models.Result)
+	currTasks = make(map[int]*models.AstNode)
 }
 
-func calc(node *ast.AstNode) string {
+func calc(node *models.AstNode) string {
 	var result float64
 	for {
 		// проходимся по дереву и находим ноды, у которых оба листка - числа
@@ -39,7 +33,7 @@ func calc(node *ast.AstNode) string {
 		case res := <-results:
 			if res.Error != "" {
 				last_result <- 0
-				currTasks = make(map[int]*ast.AstNode)
+				currTasks = make(map[int]*models.AstNode)
 				return res.Error
 			}
 			log.Printf("id: %v, res: %v, err: %v", res.ID, res.Result, res.Error)
@@ -61,7 +55,7 @@ func calc(node *ast.AstNode) string {
 	}
 }
 
-func sendTasks(node *ast.AstNode, tasks chan<- *ast.AstNode, currTasks map[int]*ast.AstNode) {
+func sendTasks(node *models.AstNode, tasks chan<- *models.AstNode, currTasks map[int]*models.AstNode) {
 	if node == nil {
 		return
 	}
@@ -84,7 +78,7 @@ func sendTasks(node *ast.AstNode, tasks chan<- *ast.AstNode, currTasks map[int]*
 	sendTasks(node.Right, tasks, currTasks)
 }
 
-func fillMap(node *ast.AstNode) {
+func fillMap(node *models.AstNode) {
 	if node == nil {
 		return
 	}
@@ -99,7 +93,7 @@ func fillMap(node *ast.AstNode) {
 	fillMap(node.Right)
 }
 
-func deleteAndUpdate(res Result) float64 {
+func deleteAndUpdate(res models.Result) float64 {
 	// когда мы получаем результат ноды, мы удаляем ее листья, а потом меняем ноду на число для дальнейших вычислений
 	// так как мапа ссылается на ноду, то, взаимодействуя с элементом мапы, мы напрямую взаимодействуем с нодой
 

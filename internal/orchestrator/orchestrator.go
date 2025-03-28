@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/vedsatt/calc_prl/pkg/ast"
+	"github.com/vedsatt/calc_prl/internal/models"
 	"github.com/vedsatt/calc_prl/pkg/database"
 )
 
@@ -32,7 +32,7 @@ type contextKey struct {
 
 type Ast struct {
 	ID  int
-	Ast *ast.AstNode
+	Ast *models.AstNode
 }
 
 type Request struct {

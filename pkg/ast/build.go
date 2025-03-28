@@ -4,9 +4,11 @@ package ast
 
 import (
 	"strings"
+
+	"github.com/vedsatt/calc_prl/internal/models"
 )
 
-func Build(expression string) (*AstNode, error) {
+func Build(expression string) (*models.AstNode, error) {
 	expression = strings.ReplaceAll(expression, " ", "") // избавляемся от пробелов
 
 	err := expErr(expression)

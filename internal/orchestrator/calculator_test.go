@@ -3,21 +3,21 @@ package orchestrator
 import (
 	"testing"
 
-	"github.com/vedsatt/calc_prl/pkg/ast"
+	"github.com/vedsatt/calc_prl/internal/models"
 )
 
 func TestSendTasks(t *testing.T) {
 	// создаем аст для теста
-	root := &ast.AstNode{
+	root := &models.AstNode{
 		ID:      1,
 		AstType: "+",
-		Left:    &ast.AstNode{ID: 2, AstType: "number", Value: "2"},
-		Right:   &ast.AstNode{ID: 3, AstType: "number", Value: "3"},
+		Left:    &models.AstNode{ID: 2, AstType: "number", Value: "2"},
+		Right:   &models.AstNode{ID: 3, AstType: "number", Value: "3"},
 	}
 
 	// инициализируем каналы и мапу
-	tasks := make(chan *ast.AstNode, 1)
-	currTasks := make(map[int]*ast.AstNode)
+	tasks := make(chan *models.AstNode, 1)
+	currTasks := make(map[int]*models.AstNode)
 	currTasks[root.ID] = root
 	currTasks[root.Left.ID] = root.Left
 	currTasks[root.Right.ID] = root.Right
@@ -38,15 +38,15 @@ func TestSendTasks(t *testing.T) {
 
 func TestDeleteAndUpdate(t *testing.T) {
 	// инициализируем глобальные переменные
-	currTasks = make(map[int]*ast.AstNode)
+	currTasks = make(map[int]*models.AstNode)
 	last_result = make(chan float64, 1)
 
 	// создаем дерево
-	root := &ast.AstNode{
+	root := &models.AstNode{
 		ID:      1,
 		AstType: "+",
-		Left:    &ast.AstNode{ID: 2, AstType: "number", Value: "2"},
-		Right:   &ast.AstNode{ID: 3, AstType: "number", Value: "3"},
+		Left:    &models.AstNode{ID: 2, AstType: "number", Value: "2"},
+		Right:   &models.AstNode{ID: 3, AstType: "number", Value: "3"},
 	}
 
 	// заполняем мапу текущих задач
@@ -55,7 +55,7 @@ func TestDeleteAndUpdate(t *testing.T) {
 	currTasks[root.Right.ID] = root.Right
 
 	// создаем результат для обновления
-	res := Result{ID: 1, Result: 5}
+	res := models.Result{ID: 1, Result: 5}
 
 	// запускаем функцию
 	result := deleteAndUpdate(res)
@@ -81,14 +81,14 @@ func TestDeleteAndUpdate(t *testing.T) {
 
 func TestFillMap(t *testing.T) {
 	// инициализируем глобальные переменные
-	currTasks = make(map[int]*ast.AstNode)
+	currTasks = make(map[int]*models.AstNode)
 
 	// создаем аст для теста
-	root := &ast.AstNode{
+	root := &models.AstNode{
 		ID:      1,
 		AstType: "+",
-		Left:    &ast.AstNode{ID: 2, AstType: "number", Value: "2"},
-		Right:   &ast.AstNode{ID: 3, AstType: "number", Value: "3"},
+		Left:    &models.AstNode{ID: 2, AstType: "number", Value: "2"},
+		Right:   &models.AstNode{ID: 3, AstType: "number", Value: "3"},
 	}
 
 	// запускаем функцию
