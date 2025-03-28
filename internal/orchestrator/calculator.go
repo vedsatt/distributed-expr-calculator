@@ -1,6 +1,7 @@
 package orchestrator
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -8,6 +9,14 @@ import (
 
 	"github.com/vedsatt/calc_prl/internal/models"
 )
+
+// выражение для подсчета
+type Expression struct {
+	tasks       chan *models.AstNode
+	results     chan models.Result
+	last_result chan float64
+	currTasks   map[int]*models.AstNode
+}
 
 var (
 	tasks       chan *models.AstNode
@@ -23,7 +32,18 @@ func init() {
 	currTasks = make(map[int]*models.AstNode)
 }
 
-func calc(node *models.AstNode) string {
+// инициализация объекта выражения
+func NewExpr() *Expression {
+	return &Expression{
+		tasks:       make(chan *models.AstNode),
+		results:     make(chan models.Result),
+		last_result: make(chan float64, 1),
+		currTasks:   make(map[int]*models.AstNode),
+	}
+}
+
+func calc(node *models.AstNode) error {
+	fillMap(node)
 	var result float64
 	for {
 		// проходимся по дереву и находим ноды, у которых оба листка - числа
@@ -34,15 +54,26 @@ func calc(node *models.AstNode) string {
 			if res.Error != "" {
 				last_result <- 0
 				currTasks = make(map[int]*models.AstNode)
-				return res.Error
+
+				// очищаем каналы
+				for len(tasks) > 0 {
+					<-tasks
+				}
+				for len(results) > 0 {
+					<-results
+				}
+				<-last_result
+
+				log.Printf("id: %v, res: %v, err: %v", res.ID, res.Result, res.Error)
+				return errors.New(res.Error)
 			}
-			log.Printf("id: %v, res: %v, err: %v", res.ID, res.Result, res.Error)
+
 			result = deleteAndUpdate(res)
 			log.Println("Updated tree with new result")
 		default:
 			if len(currTasks) == 0 {
 				last_result <- result
-				return ""
+				return nil
 			}
 			time.Sleep(10 * time.Millisecond) // избегаем busy loop
 		}
@@ -50,7 +81,7 @@ func calc(node *models.AstNode) string {
 		// если все задачи удалены - результат получен, а значит можно завершать функцию
 		if len(currTasks) == 0 {
 			last_result <- result
-			return ""
+			return nil
 		}
 	}
 }
