@@ -83,7 +83,7 @@ func (b *Base) UpdateData(id int, res float64, status string) error {
 		return errors.New(err)
 	}
 
-	res_string := fmt.Sprintf("%f", res)
+	res_string := fmt.Sprintf("%.2f", res)
 	database[id].Result = res_string
 	database[id].Status = status
 

@@ -1,6 +1,12 @@
 package ast
 
-import "github.com/vedsatt/calc_prl/internal/models"
+import (
+	"github.com/vedsatt/calc_prl/internal/models"
+)
+
+var (
+	id int = 0
+)
 
 func priority(op string) (int, error) {
 	switch {
@@ -17,7 +23,6 @@ func priority(op string) (int, error) {
 
 func ast(tokens []*token) (*models.AstNode, error) {
 	var stack []*models.AstNode
-	id := 0
 
 	for _, tok := range tokens {
 		switch tok.t {
