@@ -10,14 +10,6 @@ import (
 	"github.com/vedsatt/calc_prl/internal/models"
 )
 
-// выражение для подсчета
-type Expression struct {
-	tasks       chan *models.AstNode
-	results     chan models.Result
-	last_result chan float64
-	currTasks   map[int]*models.AstNode
-}
-
 var (
 	tasks       chan *models.AstNode
 	results     chan models.Result
@@ -30,16 +22,6 @@ func init() {
 	tasks = make(chan *models.AstNode)
 	results = make(chan models.Result)
 	currTasks = make(map[int]*models.AstNode)
-}
-
-// инициализация объекта выражения
-func NewExpr() *Expression {
-	return &Expression{
-		tasks:       make(chan *models.AstNode),
-		results:     make(chan models.Result),
-		last_result: make(chan float64, 1),
-		currTasks:   make(map[int]*models.AstNode),
-	}
 }
 
 func calc(node *models.AstNode) error {
