@@ -4,9 +4,18 @@ package ast
 
 import (
 	"strings"
+	"sync"
+
+	"github.com/vedsatt/calc_prl/internal/models"
 )
 
-func Build(expression string) (*AstNode, error) {
+var (
+	mu sync.Mutex
+)
+
+func Build(expression string) (*models.AstNode, error) {
+	mu.Lock()
+	defer mu.Unlock()
 	expression = strings.ReplaceAll(expression, " ", "") // избавляемся от пробелов
 
 	err := expErr(expression)

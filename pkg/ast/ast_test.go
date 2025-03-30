@@ -2,6 +2,8 @@ package ast
 
 import (
 	"testing"
+
+	"github.com/vedsatt/calc_prl/internal/models"
 )
 
 func TestPriority(t *testing.T) {
@@ -26,7 +28,7 @@ func TestPriority(t *testing.T) {
 	}
 }
 
-func compareAstNodes(a, b *AstNode) bool {
+func compareAstNodes(a, b *models.AstNode) bool {
 	if a == nil && b == nil {
 		return true
 	}
@@ -43,7 +45,7 @@ func TestAst(t *testing.T) {
 	tests := []struct {
 		name     string
 		tokens   []*token
-		expected *AstNode
+		expected *models.AstNode
 		err      error
 	}{
 		{
@@ -53,11 +55,11 @@ func TestAst(t *testing.T) {
 				{t: operand, val: "3"},
 				{t: operator, val: "+"},
 			},
-			expected: &AstNode{
+			expected: &models.AstNode{
 				AstType: "operation",
 				Value:   "+",
-				Left:    &AstNode{AstType: "number", Value: "2"},
-				Right:   &AstNode{AstType: "number", Value: "3"},
+				Left:    &models.AstNode{AstType: "number", Value: "2"},
+				Right:   &models.AstNode{AstType: "number", Value: "3"},
 			},
 			err: nil,
 		},
@@ -79,16 +81,16 @@ func TestAst(t *testing.T) {
 				{t: operand, val: "4"},
 				{t: operator, val: "+"},
 			},
-			expected: &AstNode{
+			expected: &models.AstNode{
 				AstType: "operation",
 				Value:   "+",
-				Left: &AstNode{
+				Left: &models.AstNode{
 					AstType: "operation",
 					Value:   "*",
-					Left:    &AstNode{AstType: "number", Value: "2"},
-					Right:   &AstNode{AstType: "number", Value: "3"},
+					Left:    &models.AstNode{AstType: "number", Value: "2"},
+					Right:   &models.AstNode{AstType: "number", Value: "3"},
 				},
-				Right: &AstNode{AstType: "number", Value: "4"},
+				Right: &models.AstNode{AstType: "number", Value: "4"},
 			},
 			err: nil,
 		},

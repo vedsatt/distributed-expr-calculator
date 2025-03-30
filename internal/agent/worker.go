@@ -9,16 +9,10 @@ import (
 	"time"
 
 	"github.com/vedsatt/calc_prl/internal/config"
-	"github.com/vedsatt/calc_prl/pkg/ast"
+	"github.com/vedsatt/calc_prl/internal/models"
 )
 
-type Result struct {
-	ID     int     `json:"id"`
-	Result float64 `json:"result"`
-	Error  string  `json:"error"`
-}
-
-func getTask() (*ast.AstNode, int) {
+func getTask() (*models.AstNode, int) {
 	client := &http.Client{
 		Timeout: 5 * time.Second, // Таймаут 5 секунд
 	}
@@ -33,7 +27,7 @@ func getTask() (*ast.AstNode, int) {
 		return nil, resp.StatusCode
 	}
 
-	var resp_body ast.AstNode
+	var resp_body models.AstNode
 	if err := json.NewDecoder(resp.Body).Decode(&resp_body); err != nil {
 		log.Printf("Error decoding response: %v", err)
 		return nil, http.StatusInternalServerError // ошибка декодирования
@@ -43,7 +37,7 @@ func getTask() (*ast.AstNode, int) {
 }
 
 func sendResult(taskID int, result float64, err string) {
-	data := &Result{ID: taskID, Result: result, Error: err}
+	data := &models.Result{ID: taskID, Result: result, Error: err}
 	jsonData, _ := json.Marshal(data)
 
 	resp, er := http.Post(

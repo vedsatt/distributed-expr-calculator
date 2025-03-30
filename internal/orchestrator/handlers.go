@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vedsatt/calc_prl/internal/models"
 	"github.com/vedsatt/calc_prl/pkg/ast"
 )
 
@@ -50,6 +51,7 @@ func databaseMiddleware(next http.Handler) http.Handler {
 			log.Printf("Code: %v, Unprocessable entity", http.StatusUnprocessableEntity)
 			return
 		}
+		expression := NewExpression(astRoot)
 
 		// добавляем выражение в базу данных и получаем id
 		expKey := base.PostData()
@@ -64,9 +66,9 @@ func databaseMiddleware(next http.Handler) http.Handler {
 		go func() {
 			// контекст нужен, чтобы передать выражение следующему хендлеру
 			ctx := context.Background()
-			ast := &Ast{ID: expKey, Ast: astRoot}
-			ctx = context.WithValue(ctx, astKey, ast)
-			log.Printf("Adding AST: %v to ctx", *ast.Ast)
+			exp := &Expr{ID: expKey, Expr: expression}
+			ctx = context.WithValue(ctx, exprKey, exp)
+			log.Printf("Adding AST: %v to ctx", *&exp.ID)
 			req := r.WithContext(ctx)
 
 			next.ServeHTTP(w, req)
@@ -75,53 +77,23 @@ func databaseMiddleware(next http.Handler) http.Handler {
 }
 
 func ExpressionHandler(w http.ResponseWriter, r *http.Request) {
-	ast, ok := r.Context().Value(astKey).(*Ast)
-	if !ok || ast.Ast == nil {
+	exp, ok := r.Context().Value(exprKey).(*Expr)
+	if !ok || exp.Expr == nil {
 		log.Printf("Error: unable to get AST from context")
 		w.WriteHeader(http.StatusInternalServerError)
-		base.UpdateData(ast.ID, 0, "error")
+		base.UpdateData(exp.ID, 0, "error")
 		return
 	}
 
-	fillMap(ast.Ast)
-	log.Println("Filled map")
-
-	err := calc(ast.Ast)
-	log.Println("End calculating expression")
-	if err != "" {
-		// сообщаем, что обнаружено деление на ноль
-		log.Printf("Expression id: %v, zero division error detected", ast.ID)
-		base.UpdateData(ast.ID, 0, "zero devision error")
-
-		// очищаем мапу
-		// почему то, если переинициализвровать мапу, то ast.AstNode не будет распознаваться
-		// поэтому приходится вручную удалять каждый элемент
-		for k := range currTasks {
-			delete(currTasks, k)
-		}
-
-		// очищаем каналы
-		for len(tasks) > 0 {
-			<-tasks
-		}
-		for len(results) > 0 {
-			<-results
-		}
-		<-last_result
-
+	res, err := exp.Expr.calc()
+	if err != nil {
+		log.Printf("Expression %v: zero division error detected", exp.ID)
+		base.UpdateData(exp.ID, 0, "zero devision error")
 		return
 	}
+	log.Printf("Expression %v calculated sucsessfully", exp.ID)
 
-	result := <-last_result
-
-	// очищаем каналы
-	for len(tasks) > 0 {
-		<-tasks
-	}
-	for len(results) > 0 {
-		<-results
-	}
-	base.UpdateData(ast.ID, result, "done")
+	base.UpdateData(exp.ID, res, "done")
 }
 
 func GetDataHandler(w http.ResponseWriter, r *http.Request) {
@@ -173,7 +145,7 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		select {
-		case task := <-tasks:
+		case task := <-tasksCh:
 			// если есть задача, отправляем её агенту
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(task)
@@ -182,9 +154,9 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 		}
 	case http.MethodPost:
-		var result Result
+		var result models.Result
 		json.NewDecoder(r.Body).Decode(&result)
-		results <- result
+		resultsCh <- result
 
 		// закрываем тело запроса
 		defer r.Body.Close()

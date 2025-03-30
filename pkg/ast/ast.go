@@ -1,13 +1,12 @@
 package ast
 
-type AstNode struct {
-	ID       int      `json:"id"`
-	AstType  string   `json:"type"`
-	Value    string   `json:"operation"`
-	Left     *AstNode `json:"arg1"`
-	Right    *AstNode `json:"arg2"`
-	Counting bool     `json:"status"`
-}
+import (
+	"github.com/vedsatt/calc_prl/internal/models"
+)
+
+var (
+	id int = 0
+)
 
 func priority(op string) (int, error) {
 	switch {
@@ -22,15 +21,14 @@ func priority(op string) (int, error) {
 	}
 }
 
-func ast(tokens []*token) (*AstNode, error) {
-	var stack []*AstNode
-	id := 0
+func ast(tokens []*token) (*models.AstNode, error) {
+	var stack []*models.AstNode
 
 	for _, tok := range tokens {
 		switch tok.t {
 		case operand:
 			// создаем узел для числа
-			node := &AstNode{
+			node := &models.AstNode{
 				ID:      id,
 				AstType: "number",
 				Value:   tok.val,
@@ -50,7 +48,7 @@ func ast(tokens []*token) (*AstNode, error) {
 			stack = stack[:len(stack)-2]
 
 			// создаем новый узел операции для оператора
-			node := &AstNode{
+			node := &models.AstNode{
 				ID:      id,
 				AstType: "operation",
 				Value:   tok.val,

@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/vedsatt/calc_prl/pkg/ast"
 	"github.com/vedsatt/calc_prl/pkg/database"
 )
 
@@ -21,18 +20,18 @@ func New() *Orchestrator {
 }
 
 var (
-	base   = database.New()
-	mu     sync.Mutex // Мьютекс для синхронизации доступа к результатам
-	astKey = contextKey{"ast"}
+	base    = database.New()
+	mu      sync.Mutex // Мьютекс для синхронизации доступа к результатам
+	exprKey = contextKey{"expression"}
 )
 
 type contextKey struct {
 	name string
 }
 
-type Ast struct {
-	ID  int
-	Ast *ast.AstNode
+type Expr struct {
+	ID   int
+	Expr *expression
 }
 
 type Request struct {
@@ -61,6 +60,8 @@ func checkId(id string) bool {
 }
 
 func (o *Orchestrator) Run() {
+	go StartManager()
+
 	mux := http.NewServeMux()
 
 	expr := http.HandlerFunc(ExpressionHandler)

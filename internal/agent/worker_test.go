@@ -9,14 +9,14 @@ import (
 	"time"
 
 	"github.com/vedsatt/calc_prl/internal/config"
-	"github.com/vedsatt/calc_prl/pkg/ast"
+	"github.com/vedsatt/calc_prl/internal/models"
 )
 
 // определяем пакетную переменную для базового URL
 var baseURL = "http://localhost:8080"
 
 // изменяем getTask и sendResult для использования baseURL
-func get() (*ast.AstNode, bool) {
+func get() (*models.AstNode, bool) {
 	resp, err := http.Get(baseURL + "/internal/task")
 	if err != nil {
 		return nil, false
@@ -27,7 +27,7 @@ func get() (*ast.AstNode, bool) {
 		return nil, false
 	}
 
-	var resp_body ast.AstNode
+	var resp_body models.AstNode
 	if err := json.NewDecoder(resp.Body).Decode(&resp_body); err != nil {
 		return nil, false
 	}
@@ -36,7 +36,7 @@ func get() (*ast.AstNode, bool) {
 }
 
 func sendRes(taskID int, result float64) {
-	data := &Result{ID: taskID, Result: result}
+	data := &models.Result{ID: taskID, Result: result}
 	jsonData, _ := json.Marshal(data)
 
 	resp, err := http.Post(
@@ -61,11 +61,11 @@ func TestGetTask(t *testing.T) {
 			t.Errorf("Expected GET method, got %s", r.Method)
 		}
 
-		response := &ast.AstNode{
+		response := &models.AstNode{
 			ID:    1,
 			Value: "+",
-			Left:  &ast.AstNode{Value: "2"},
-			Right: &ast.AstNode{Value: "3"},
+			Left:  &models.AstNode{Value: "2"},
+			Right: &models.AstNode{Value: "3"},
 		}
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(response)
@@ -97,7 +97,7 @@ func TestSendResult(t *testing.T) {
 			t.Errorf("Expected POST method, got %s", r.Method)
 		}
 
-		var result Result
+		var result models.Result
 		if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
 			t.Errorf("Error decoding request body: %v", err)
 		}
@@ -148,16 +148,16 @@ func TestWorker(t *testing.T) {
 			t.Errorf("Expected to request '/internal/task', got: %s", r.URL.Path)
 		}
 		if r.Method == http.MethodGet {
-			response := &ast.AstNode{
+			response := &models.AstNode{
 				ID:    1,
 				Value: "+",
-				Left:  &ast.AstNode{Value: "2"},
-				Right: &ast.AstNode{Value: "3"},
+				Left:  &models.AstNode{Value: "2"},
+				Right: &models.AstNode{Value: "3"},
 			}
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(response)
 		} else if r.Method == http.MethodPost {
-			var result Result
+			var result models.Result
 			if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
 				t.Errorf("Error decoding request body: %v", err)
 			}
