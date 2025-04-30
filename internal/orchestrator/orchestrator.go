@@ -76,6 +76,7 @@ func (o *Orchestrator) Run() {
 	mux.Handle("/internal/task", tasks)
 
 	log.Printf("Starting sevrer on port %s", port)
-	log.Fatal(http.ListenAndServe(port, mux))
 	//runGRPC()
+	log.Fatal(http.ListenAndServe(port, mux))
+
 }
