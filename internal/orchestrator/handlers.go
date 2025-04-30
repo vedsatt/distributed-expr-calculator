@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vedsatt/calc_prl/internal/models"
 	"github.com/vedsatt/calc_prl/pkg/ast"
 )
 
@@ -68,7 +67,7 @@ func databaseMiddleware(next http.Handler) http.Handler {
 			ctx := context.Background()
 			exp := &Expr{ID: expKey, Expr: expression}
 			ctx = context.WithValue(ctx, exprKey, exp)
-			log.Printf("Adding AST: %v to ctx", *&exp.ID)
+			log.Printf("Adding AST: %v to ctx", exp.ID)
 			req := r.WithContext(ctx)
 
 			next.ServeHTTP(w, req)
@@ -138,27 +137,5 @@ func GetDataHandler(w http.ResponseWriter, r *http.Request) {
 		errorResponse(w, "error with json data", http.StatusInternalServerError)
 		log.Printf("Code: %v, Internal server error", http.StatusInternalServerError)
 		return
-	}
-}
-
-func TaskHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		select {
-		case task := <-tasksCh:
-			// если есть задача, отправляем её агенту
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(task)
-		default:
-			// если задач нет, возвращаем http 404
-			w.WriteHeader(http.StatusNotFound)
-		}
-	case http.MethodPost:
-		var result models.Result
-		json.NewDecoder(r.Body).Decode(&result)
-		resultsCh <- result
-
-		// закрываем тело запроса
-		defer r.Body.Close()
 	}
 }
