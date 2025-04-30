@@ -1,10 +1,7 @@
 package agent
 
 import (
-	"bytes"
-	"encoding/json"
 	"log"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -12,67 +9,13 @@ import (
 	"github.com/vedsatt/calc_prl/internal/models"
 )
 
-func getTask() (*models.AstNode, int) {
-	client := &http.Client{
-		Timeout: 5 * time.Second, // Таймаут 5 секунд
-	}
-
-	resp, err := client.Get("http://orchestrator:8080/internal/task")
-	if err != nil {
-		return nil, http.StatusInternalServerError // сервер недоступен
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, resp.StatusCode
-	}
-
-	var resp_body models.AstNode
-	if err := json.NewDecoder(resp.Body).Decode(&resp_body); err != nil {
-		log.Printf("Error decoding response: %v", err)
-		return nil, http.StatusInternalServerError // ошибка декодирования
-	}
-
-	return &resp_body, resp.StatusCode
-}
-
-func sendResult(taskID int, result float64, err string) {
-	data := &models.Result{ID: taskID, Result: result, Error: err}
-	jsonData, _ := json.Marshal(data)
-
-	resp, er := http.Post(
-		"http://orchestrator:8080/internal/task",
-		"application/json",
-		bytes.NewBuffer(jsonData),
-	)
-
-	if er != nil {
-		log.Printf("server error: %s", err)
-	} else {
-		resp.Body.Close()
-	}
-}
-
 func worker(cfg config.Config) {
-	for {
-		task, code := getTask()
-		if code == http.StatusNotFound {
-			time.Sleep(2 * time.Second)
-			continue
-		}
-
-		if code != http.StatusOK && code != http.StatusInternalServerError {
-			log.Printf("error with code: %v", code)
-			continue
-		}
-
-		if task == nil || task.Left == nil || task.Right == nil {
-			continue
-		}
-
+	for task := range tasksCh {
 		log.Printf("worker got expression with id %v", task.ID)
-		result, err := calculate(task.Left.Value, task.Right.Value, task.Value, cfg)
-		sendResult(task.ID, result, err)
+		result, err := calculate(task.Arg1, task.Arg2, task.Type, cfg)
+
+		res := &models.Result{ID: task.ID, Result: result, Error: err}
+		resultsCh <- res
 		log.Printf("worker sent result %v with id %v", result, task.ID)
 	}
 }

@@ -26,7 +26,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrchestratorClient interface {
-	Calculate(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AgentResponce, TaskRequest], error)
+	// Оркестратор отправляет задания (Task), агент возвращает результаты (Response)
+	Calculate(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AgentResponse, TaskRequest], error)
 }
 
 type orchestratorClient struct {
@@ -37,24 +38,25 @@ func NewOrchestratorClient(cc grpc.ClientConnInterface) OrchestratorClient {
 	return &orchestratorClient{cc}
 }
 
-func (c *orchestratorClient) Calculate(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AgentResponce, TaskRequest], error) {
+func (c *orchestratorClient) Calculate(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AgentResponse, TaskRequest], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Orchestrator_ServiceDesc.Streams[0], Orchestrator_Calculate_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[AgentResponce, TaskRequest]{ClientStream: stream}
+	x := &grpc.GenericClientStream[AgentResponse, TaskRequest]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Orchestrator_CalculateClient = grpc.BidiStreamingClient[AgentResponce, TaskRequest]
+type Orchestrator_CalculateClient = grpc.BidiStreamingClient[AgentResponse, TaskRequest]
 
 // OrchestratorServer is the server API for Orchestrator service.
 // All implementations must embed UnimplementedOrchestratorServer
 // for forward compatibility.
 type OrchestratorServer interface {
-	Calculate(grpc.BidiStreamingServer[AgentResponce, TaskRequest]) error
+	// Оркестратор отправляет задания (Task), агент возвращает результаты (Response)
+	Calculate(grpc.BidiStreamingServer[AgentResponse, TaskRequest]) error
 	mustEmbedUnimplementedOrchestratorServer()
 }
 
@@ -65,7 +67,7 @@ type OrchestratorServer interface {
 // pointer dereference when methods are called.
 type UnimplementedOrchestratorServer struct{}
 
-func (UnimplementedOrchestratorServer) Calculate(grpc.BidiStreamingServer[AgentResponce, TaskRequest]) error {
+func (UnimplementedOrchestratorServer) Calculate(grpc.BidiStreamingServer[AgentResponse, TaskRequest]) error {
 	return status.Errorf(codes.Unimplemented, "method Calculate not implemented")
 }
 func (UnimplementedOrchestratorServer) mustEmbedUnimplementedOrchestratorServer() {}
@@ -90,11 +92,11 @@ func RegisterOrchestratorServer(s grpc.ServiceRegistrar, srv OrchestratorServer)
 }
 
 func _Orchestrator_Calculate_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(OrchestratorServer).Calculate(&grpc.GenericServerStream[AgentResponce, TaskRequest]{ServerStream: stream})
+	return srv.(OrchestratorServer).Calculate(&grpc.GenericServerStream[AgentResponse, TaskRequest]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Orchestrator_CalculateServer = grpc.BidiStreamingServer[AgentResponce, TaskRequest]
+type Orchestrator_CalculateServer = grpc.BidiStreamingServer[AgentResponse, TaskRequest]
 
 // Orchestrator_ServiceDesc is the grpc.ServiceDesc for Orchestrator service.
 // It's only intended for direct use with grpc.RegisterService,

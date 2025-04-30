@@ -34,7 +34,6 @@ func StartManager() {
 	resultsCh = make(chan models.Result)
 
 	managerCh = make(chan channels)
-	channelsManager(managerCh)
 	go channelsManager(managerCh)
 }
 

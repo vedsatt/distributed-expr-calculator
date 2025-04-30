@@ -1,67 +1,96 @@
 package orchestrator
 
-// import (
-// 	"log"
-// 	"net"
+import (
+	"context"
+	"log"
+	"net"
+	"sync"
 
-// 	pb "github.com/vedsatt/calc_prl/api/gen/go"
-// 	"github.com/vedsatt/calc_prl/internal/models"
-// 	"google.golang.org/grpc"
-// )
+	pb "github.com/vedsatt/calc_prl/api/gen/go"
+	"github.com/vedsatt/calc_prl/internal/models"
+	"google.golang.org/grpc"
+)
 
-// type Server struct {
-// 	pb.OrchestratorServer
-// }
+type Server struct {
+	pb.UnimplementedOrchestratorServer
+	mu sync.Mutex
+}
 
-// func NewServer() *Server {
-// 	return &Server{}
-// }
+func NewServer() *Server {
+	return &Server{mu: sync.Mutex{}}
+}
 
-// func (s *Server) Calculate(stream pb.Orchestrator_CalculateServer) {
-// 	go func() {
-// 		for {
-// 			select {
-// 			case task := <-tasksCh:
-// 				grpcTask := &pb.TaskRequest{
-// 					ID:       int32(task.ID),
-// 					Arg1:     task.Left.Value,
-// 					Arg2:     task.Right.Value,
-// 					Operator: task.AstType,
-// 				}
-// 				if err := stream.Send(grpcTask); err != nil {
-// 					log.Printf("Failed to send task: %v", err)
-// 				}
-// 			}
-// 		}
-// 	}()
+func (s *Server) Calculate(stream pb.Orchestrator_CalculateServer) error {
+	log.Printf("agent connected to gRPC server")
+	ctx, cancel := context.WithCancel(stream.Context())
+	defer cancel()
 
-// 	go func() {
-// 		res, err := stream.Recv()
-// 		if err != nil {
-// 			log.Printf("Failed to get receive from agent: %v", err)
-// 			result := models.Result{
-// 				ID:     int(res.ID),
-// 				Result: float64(res.Result),
-// 				Error:  res.Error,
-// 			}
-// 			resultsCh <- result
-// 		}
-// 	}()
-// }
+	done := make(chan struct{})
+	defer close(done)
 
-// func runGRPC() {
-// 	addr := "localhost:5000"
-// 	lis, err := net.Listen("tcp", addr)
-// 	if err != nil {
-// 		log.Fatalf("error starting tcp server: %v", err)
-// 	}
+	go func() {
+		defer cancel()
+		for {
+			select {
+			case task := <-tasksCh:
+				s.mu.Lock()
+				err := stream.Send(&pb.TaskRequest{
+					Id:       int32(task.ID),
+					Arg1:     task.Left.Value,
+					Arg2:     task.Right.Value,
+					Operator: task.Value,
+				})
+				s.mu.Unlock()
 
-// 	log.Printf("tcp server started on port: %v", port)
-// 	grpcServer := grpc.NewServer()
-// 	orchServer := NewServer()
-// 	pb.RegisterOrchestratorServer(grpcServer, orchServer.OrchestratorServer)
+				if err != nil {
+					log.Printf("Failed to send task: %v", err)
+					return
+				}
+			case <-ctx.Done():
+				return
+			case <-done:
+				return
+			}
+		}
+	}()
 
-// 	if err := grpcServer.Serve(lis); err != nil {
-// 		log.Fatalf("error serving grpc: %v", err)
-// 	}
-// }
+	go func() {
+		defer cancel()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				res, err := stream.Recv()
+				if err != nil {
+					log.Printf("Receive error: %v", err)
+					return
+				}
+				resultsCh <- models.Result{
+					ID:     int(res.Id),
+					Result: float64(res.Result),
+					Error:  res.Error,
+				}
+			}
+		}
+	}()
+
+	<-ctx.Done()
+	return nil
+}
+
+func runGRPC() {
+	// addr := "localhost:8080"
+	lis, err := net.Listen("tcp", ":5000")
+	if err != nil {
+		log.Fatalf("error starting tcp server: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterOrchestratorServer(grpcServer, NewServer())
+
+	log.Printf("tcp server started at: %v", lis.Addr())
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("error serving grpc: %v", err)
+	}
+}

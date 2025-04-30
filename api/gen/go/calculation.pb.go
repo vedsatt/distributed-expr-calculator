@@ -23,7 +23,7 @@ const (
 
 type TaskRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            int32                  `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Arg1          string                 `protobuf:"bytes,2,opt,name=arg1,proto3" json:"arg1,omitempty"`
 	Arg2          string                 `protobuf:"bytes,3,opt,name=arg2,proto3" json:"arg2,omitempty"`
 	Operator      string                 `protobuf:"bytes,4,opt,name=operator,proto3" json:"operator,omitempty"`
@@ -61,9 +61,9 @@ func (*TaskRequest) Descriptor() ([]byte, []int) {
 	return file_calculation_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *TaskRequest) GetID() int32 {
+func (x *TaskRequest) GetId() int32 {
 	if x != nil {
-		return x.ID
+		return x.Id
 	}
 	return 0
 }
@@ -89,29 +89,29 @@ func (x *TaskRequest) GetOperator() string {
 	return ""
 }
 
-type AgentResponce struct {
+type AgentResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            int32                  `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Result        float32                `protobuf:"fixed32,2,opt,name=result,proto3" json:"result,omitempty"`
 	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *AgentResponce) Reset() {
-	*x = AgentResponce{}
+func (x *AgentResponse) Reset() {
+	*x = AgentResponse{}
 	mi := &file_calculation_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *AgentResponce) String() string {
+func (x *AgentResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AgentResponce) ProtoMessage() {}
+func (*AgentResponse) ProtoMessage() {}
 
-func (x *AgentResponce) ProtoReflect() protoreflect.Message {
+func (x *AgentResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_calculation_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -123,26 +123,26 @@ func (x *AgentResponce) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AgentResponce.ProtoReflect.Descriptor instead.
-func (*AgentResponce) Descriptor() ([]byte, []int) {
+// Deprecated: Use AgentResponse.ProtoReflect.Descriptor instead.
+func (*AgentResponse) Descriptor() ([]byte, []int) {
 	return file_calculation_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *AgentResponce) GetID() int32 {
+func (x *AgentResponse) GetId() int32 {
 	if x != nil {
-		return x.ID
+		return x.Id
 	}
 	return 0
 }
 
-func (x *AgentResponce) GetResult() float32 {
+func (x *AgentResponse) GetResult() float32 {
 	if x != nil {
 		return x.Result
 	}
 	return 0
 }
 
-func (x *AgentResponce) GetError() string {
+func (x *AgentResponse) GetError() string {
 	if x != nil {
 		return x.Error
 	}
@@ -155,16 +155,16 @@ const file_calculation_proto_rawDesc = "" +
 	"\n" +
 	"\x11calculation.proto\x12\tcalculate\"a\n" +
 	"\vTaskRequest\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x05R\x02ID\x12\x12\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04arg1\x18\x02 \x01(\tR\x04arg1\x12\x12\n" +
 	"\x04arg2\x18\x03 \x01(\tR\x04arg2\x12\x1a\n" +
 	"\boperator\x18\x04 \x01(\tR\boperator\"M\n" +
-	"\rAgentResponce\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x05R\x02ID\x12\x16\n" +
+	"\rAgentResponse\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x16\n" +
 	"\x06result\x18\x02 \x01(\x02R\x06result\x12\x14\n" +
 	"\x05error\x18\x03 \x01(\tR\x05error2Q\n" +
 	"\fOrchestrator\x12A\n" +
-	"\tCalculate\x12\x18.calculate.AgentResponce\x1a\x16.calculate.TaskRequest(\x010\x01B#Z!github.com/vedsatt/calc_prl/protob\x06proto3"
+	"\tCalculate\x12\x18.calculate.AgentResponse\x1a\x16.calculate.TaskRequest(\x010\x01B#Z!github.com/vedsatt/calc_prl/protob\x06proto3"
 
 var (
 	file_calculation_proto_rawDescOnce sync.Once
@@ -181,10 +181,10 @@ func file_calculation_proto_rawDescGZIP() []byte {
 var file_calculation_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_calculation_proto_goTypes = []any{
 	(*TaskRequest)(nil),   // 0: calculate.TaskRequest
-	(*AgentResponce)(nil), // 1: calculate.AgentResponce
+	(*AgentResponse)(nil), // 1: calculate.AgentResponse
 }
 var file_calculation_proto_depIdxs = []int32{
-	1, // 0: calculate.Orchestrator.Calculate:input_type -> calculate.AgentResponce
+	1, // 0: calculate.Orchestrator.Calculate:input_type -> calculate.AgentResponse
 	0, // 1: calculate.Orchestrator.Calculate:output_type -> calculate.TaskRequest
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type

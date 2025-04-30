@@ -61,22 +61,19 @@ func checkId(id string) bool {
 
 func (o *Orchestrator) Run() {
 	StartManager()
+	// запуск сервера для общения с агентом
+	go runGRPC()
 
 	mux := http.NewServeMux()
 
 	expr := http.HandlerFunc(ExpressionHandler)
 	GetData := http.HandlerFunc(GetDataHandler)
-	tasks := http.HandlerFunc(TaskHandler)
 
-	// хендлеры для пользователя
+	// хендлеры
 	mux.Handle("/api/v1/calculate", loggingMiddleware(databaseMiddleware(expr)))
 	mux.Handle("/api/v1/expressions/", loggingMiddleware(GetData))
 
-	// хендлер для общения с агентом
-	mux.Handle("/internal/task", tasks)
-
 	log.Printf("Starting sevrer on port %s", port)
-	//runGRPC()
 	log.Fatal(http.ListenAndServe(port, mux))
 
 }

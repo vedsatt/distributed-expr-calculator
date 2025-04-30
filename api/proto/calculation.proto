@@ -3,18 +3,19 @@ package calculate;
 option go_package = "github.com/vedsatt/calc_prl/proto";
 
 service Orchestrator {
-    rpc Calculate (stream AgentResponce) returns (stream TaskRequest);
+    // Оркестратор отправляет задания (Task), агент возвращает результаты (Response)
+    rpc Calculate (stream AgentResponse) returns (stream TaskRequest);
 }
 
 message TaskRequest {
-    int32 ID = 1;
+    int32 id = 1;
     string arg1 = 2;
     string arg2 = 3;
     string operator = 4;
 }
 
-message AgentResponce {
-    int32 ID = 1;
+message AgentResponse {
+    int32 id = 1;
     float result = 2;
     string error = 3;
 }
