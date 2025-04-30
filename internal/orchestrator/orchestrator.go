@@ -60,7 +60,7 @@ func checkId(id string) bool {
 }
 
 func (o *Orchestrator) Run() {
-	go StartManager()
+	StartManager()
 
 	mux := http.NewServeMux()
 
@@ -77,4 +77,5 @@ func (o *Orchestrator) Run() {
 
 	log.Printf("Starting sevrer on port %s", port)
 	log.Fatal(http.ListenAndServe(port, mux))
+	//runGRPC()
 }
