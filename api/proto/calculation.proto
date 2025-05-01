@@ -1,0 +1,23 @@
+syntax = "proto3";
+package calculate;
+option go_package = "github.com/vedsatt/calc_prl/proto";
+
+service Orchestrator {
+    // Оркестратор отправляет задания (Task), агент возвращает результаты (Response)
+    rpc Calculate (stream AgentResponse) returns (stream TaskRequest);
+}
+
+message TaskRequest {
+    int32 id = 1;
+    string arg1 = 2;
+    string arg2 = 3;
+    string operator = 4;
+}
+
+message AgentResponse {
+    int32 id = 1;
+    float result = 2;
+    string error = 3;
+}
+
+// protoc -I api/proto api/proto/calculation.proto --go_out=./api/gen/go --go_opt=paths=source_relative --go-grpc_out=api/gen/go --go-grpc_opt=paths=source_relative
