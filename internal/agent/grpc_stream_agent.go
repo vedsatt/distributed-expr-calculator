@@ -13,7 +13,7 @@ import (
 func Connect() {
 	for {
 		conn, err := grpc.NewClient(
-			"localhost:5000",
+			"orchestrator:5000",
 			grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 		if err != nil {
@@ -76,11 +76,12 @@ func handleStream(client pb.OrchestratorClient) error {
 		for {
 			select {
 			case result := <-resultsCh:
-				if err := stream.Send(&pb.AgentResponse{
+				err := stream.Send(&pb.AgentResponse{
 					Id:     int32(result.ID),
 					Result: float32(result.Result),
 					Error:  result.Error,
-				}); err != nil {
+				})
+				if err != nil {
 					log.Printf("Send error: %v", err)
 					return
 				}

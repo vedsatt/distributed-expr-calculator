@@ -70,8 +70,8 @@ func (o *Orchestrator) Run() {
 	GetData := http.HandlerFunc(GetDataHandler)
 
 	// хендлеры
-	mux.Handle("/api/v1/calculate", loggingMiddleware(databaseMiddleware(expr)))
-	mux.Handle("/api/v1/expressions/", loggingMiddleware(GetData))
+	mux.Handle("/api/v1/calculate", logsMiddleware(databaseMiddleware(expr)))
+	mux.Handle("/api/v1/expressions/", logsMiddleware(GetData))
 
 	log.Printf("Starting sevrer on port %s", port)
 	log.Fatal(http.ListenAndServe(port, mux))

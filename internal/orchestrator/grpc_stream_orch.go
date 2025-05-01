@@ -11,6 +11,11 @@ import (
 	"google.golang.org/grpc"
 )
 
+const (
+	tcp         = "tcp"
+	addr string = ":5000"
+)
+
 type Server struct {
 	pb.UnimplementedOrchestratorServer
 	mu sync.Mutex
@@ -21,7 +26,8 @@ func NewServer() *Server {
 }
 
 func (s *Server) Calculate(stream pb.Orchestrator_CalculateServer) error {
-	log.Printf("agent connected to gRPC server")
+	log.Println("agent connected to gRPC server")
+	defer log.Println("agent disconnected")
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer cancel()
 
@@ -80,8 +86,7 @@ func (s *Server) Calculate(stream pb.Orchestrator_CalculateServer) error {
 }
 
 func runGRPC() {
-	// addr := "localhost:8080"
-	lis, err := net.Listen("tcp", ":5000")
+	lis, err := net.Listen(tcp, addr)
 	if err != nil {
 		log.Fatalf("error starting tcp server: %v", err)
 	}
