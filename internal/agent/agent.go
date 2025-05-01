@@ -19,8 +19,8 @@ type Task struct {
 }
 
 var (
-	resultsCh chan *models.Result
-	tasksCh   chan *Task
+	resultsCh = make(chan *models.Result)
+	tasksCh   = make(chan *Task)
 )
 
 func New(cfg config.Config) *Agent {
@@ -28,14 +28,7 @@ func New(cfg config.Config) *Agent {
 	return &Agent{config: cfg}
 }
 
-func chanInit() {
-	resultsCh = make(chan *models.Result)
-	tasksCh = make(chan *Task)
-}
-
 func (a *Agent) Run() {
-	chanInit()
-
 	go Connect()
 
 	for i := range a.config.ComputingPower {

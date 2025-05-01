@@ -13,7 +13,7 @@ import (
 	"github.com/vedsatt/calc_prl/pkg/ast"
 )
 
-func loggingMiddleware(next http.Handler) http.Handler {
+func logsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Method: %s, URL: %s", r.Method, r.URL)
 
