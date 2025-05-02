@@ -12,39 +12,39 @@ import (
 
 const port = ":8080"
 
-type Orchestrator struct {
-}
+type (
+	Orchestrator struct {
+	}
+
+	Request struct {
+		Expression string `json:"expression"`
+	}
+
+	RespID struct {
+		Id int `json:"id"`
+	}
+
+	Error struct {
+		Res string `json:"error"`
+	}
+
+	ExprReq struct {
+		exp string
+		id  int
+	}
+
+	contextKey string
+)
 
 func New() *Orchestrator {
 	return &Orchestrator{}
 }
 
 var (
-	base    = database.New()
-	mu      sync.Mutex // Мьютекс для синхронизации доступа к результатам
-	exprKey = contextKey{"expression"}
+	base   = database.New()
+	mu     sync.Mutex // Мьютекс для синхронизации доступа к результатам
+	ctxKey contextKey = "expression id"
 )
-
-type contextKey struct {
-	name string
-}
-
-type Expr struct {
-	ID   int
-	Expr *expression
-}
-
-type Request struct {
-	Expression string `json:"expression"`
-}
-
-type Error struct {
-	Res string `json:"error"`
-}
-
-type RespID struct {
-	Id int `json:"id"`
-}
 
 func errorResponse(w http.ResponseWriter, err string, statusCode int) {
 	w.WriteHeader(statusCode)

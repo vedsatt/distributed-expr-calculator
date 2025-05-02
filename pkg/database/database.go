@@ -30,12 +30,14 @@ func New() *Base {
 
 var database map[int]*Data
 
+func GenerateID() int {
+	return int(time.Now().UnixNano())
+}
+
 // формируем новое выражение и получаем его айди
 func (b *Base) PostData() int {
-	id := int(time.Now().UnixNano())
-
+	id := GenerateID()
 	database[id] = &Data{Id: id, Status: "in process", Result: ""}
-
 	return id
 }
 

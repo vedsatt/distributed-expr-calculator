@@ -9,7 +9,7 @@ var (
 	ErrOperatorLast      = errors.New("the last character is the operator")
 	ErrEmptyBrackets     = errors.New("empty brackets")
 	ErrMergedBrackets    = errors.New("no symbol between brackets")
-	ErrMergedOperators   = errors.New("the two operators are next to each other")
+	ErrMergedOperators   = errors.New("two operators are next to each other")
 	ErrWrongCharacter    = errors.New("the wrong character was found")
 	ErrInvalidExpression = errors.New("invalid expression")
 	ErrNotOpenedBracket  = errors.New("the bracket is not open")

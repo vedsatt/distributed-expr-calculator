@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	managerCh chan channels
-	tasksCh   chan *models.AstNode
-	resultsCh chan models.Result
+	managerCh = make(chan channels)
+	tasksCh   = make(chan *models.AstNode)
+	resultsCh = make(chan models.Result)
 )
 
 type channels struct {
@@ -30,10 +30,6 @@ type expression struct {
 }
 
 func StartManager() {
-	tasksCh = make(chan *models.AstNode)
-	resultsCh = make(chan models.Result)
-
-	managerCh = make(chan channels)
 	go channelsManager(managerCh)
 }
 
