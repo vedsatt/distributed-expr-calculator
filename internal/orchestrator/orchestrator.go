@@ -16,7 +16,7 @@ type (
 	Orchestrator struct {
 	}
 
-	Request struct {
+	ExpressionReq struct {
 		Expression string `json:"expression"`
 	}
 
@@ -28,12 +28,13 @@ type (
 		Res string `json:"error"`
 	}
 
-	ExprReq struct {
+	Expression struct {
 		exp string
 		id  int
 	}
 
 	contextKey string
+	userid     string
 )
 
 func New() *Orchestrator {
@@ -41,9 +42,10 @@ func New() *Orchestrator {
 }
 
 var (
-	base   = database.New()
+	db     *database.SqlDB
 	mu     sync.Mutex // Мьютекс для синхронизации доступа к результатам
 	ctxKey contextKey = "expression id"
+	userID userid     = "user id"
 )
 
 func errorResponse(w http.ResponseWriter, err string, statusCode int) {
@@ -60,20 +62,29 @@ func checkId(id string) bool {
 }
 
 func (o *Orchestrator) Run() {
+	// подключение к бд
+	db = database.NewDB()
+	defer db.Store.Close()
+
+	// запуск менеджера каналов выражений
 	StartManager()
 	// запуск сервера для общения с агентом
 	go runGRPC()
 
 	mux := http.NewServeMux()
 
+	register := http.HandlerFunc(RegisterHandler)
+	login := http.HandlerFunc(LoginHandler)
 	expr := http.HandlerFunc(ExpressionHandler)
-	GetData := http.HandlerFunc(GetDataHandler)
+	getData := http.HandlerFunc(GetDataHandler)
 
 	// хендлеры
-	mux.Handle("/api/v1/calculate", logsMiddleware(databaseMiddleware(expr)))
-	mux.Handle("/api/v1/expressions/", logsMiddleware(GetData))
+	mux.Handle("/api/v1/register", logsMiddleware(register))
+	mux.Handle("/api/v1/login", logsMiddleware(login))
+	mux.Handle("/api/v1/calculate", logsMiddleware(authMiddleware(databaseMiddleware(expr))))
+	mux.Handle("/api/v1/expressions/", logsMiddleware(authMiddleware(getData)))
 
-	log.Printf("Starting sevrer on port %s", port)
+	log.Printf("Starting server on port %s", port)
 	log.Fatal(http.ListenAndServe(port, mux))
 
 }

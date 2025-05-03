@@ -30,6 +30,7 @@ type expression struct {
 }
 
 func StartManager() {
+	log.Println("Starting channel manager...")
 	go channelsManager(managerCh)
 }
 
@@ -43,6 +44,7 @@ func StartManager() {
 func channelsManager(chans chan channels) {
 	chanMap := make(map[int]channels)
 	mu := &sync.Mutex{}
+	log.Println("Channel manager started successfully")
 
 	for ch := range chans {
 		go func(ch channels, chanMap map[int]channels, mu *sync.Mutex) {

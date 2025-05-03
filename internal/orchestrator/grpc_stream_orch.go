@@ -86,6 +86,7 @@ func (s *Server) Calculate(stream pb.Orchestrator_CalculateServer) error {
 }
 
 func runGRPC() {
+	log.Println("Starting tcp server...")
 	lis, err := net.Listen(tcp, addr)
 	if err != nil {
 		log.Fatalf("error starting tcp server: %v", err)

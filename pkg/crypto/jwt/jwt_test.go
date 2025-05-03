@@ -9,9 +9,7 @@ import (
 )
 
 func TestGenerate(t *testing.T) {
-	username1 := "username1"
-
-	token, err := Generate(username1)
+	token, err := Generate(123)
 	if err != nil {
 		t.Fatalf("Generte error: %v", err)
 	}
@@ -20,8 +18,7 @@ func TestGenerate(t *testing.T) {
 		t.Fatalf("Generation token fail: empty token")
 	}
 
-	username2 := "username2"
-	token2, _ := Generate(username2)
+	token2, _ := Generate(321)
 	if token == token2 {
 		t.Fatalf("Generate returns same tokens for different urernames")
 	}
@@ -35,12 +32,14 @@ func TestGenerate(t *testing.T) {
 func TestVerify(t *testing.T) {
 	testcases := []struct {
 		name     string
+		id       int
 		token    string
 		expected bool
 	}{
 		{
 			name:     "valid",
-			token:    GeneratetestTokens(t, "usname", time.Now().Add(time.Minute*5)),
+			id:       123,
+			token:    GeneratetestTokens(t, 123, time.Now().Add(time.Minute*5)),
 			expected: true,
 		},
 		{
@@ -50,25 +49,29 @@ func TestVerify(t *testing.T) {
 		},
 		{
 			name:     "expired",
-			token:    GeneratetestTokens(t, "usname", time.Now().Add(-time.Minute*5)),
+			id:       123,
+			token:    GeneratetestTokens(t, 123, time.Now().Add(-time.Minute*5)),
 			expected: false,
 		},
 	}
 
 	for _, tc := range testcases {
-		got := Verify(tc.token)
+		got, id := Verify(tc.token)
 		if tc.expected != got {
 			t.Fatalf("test: %v failure, expected: %v, but got: %v", tc.name, tc.expected, got)
+		}
+		if tc.id != id && got {
+			t.Fatalf("test: %v failure id, expected: %v, but got: %v", tc.name, tc.id, id)
 		}
 	}
 }
 
-func GeneratetestTokens(t *testing.T, usname string, exp time.Time) string {
+func GeneratetestTokens(t *testing.T, userID int, exp time.Time) string {
 	t.Helper()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"name": usname,
-		"exp":  exp.Unix(),
-		"iat":  time.Now().Unix(),
+		"id":  userID,
+		"exp": exp.Unix(),
+		"iat": time.Now().Unix(),
 	})
 
 	tokenString, _ := token.SignedString([]byte(HmacSampleSecret))

@@ -1,4 +1,4 @@
-FROM golang:1.23.7 AS builder
+FROM golang:1.24.2 AS builder
 
 WORKDIR /app
 
@@ -17,4 +17,5 @@ WORKDIR /app
 COPY --from=builder /app/agent .
 COPY .env .env
 
+USER 1000
 CMD ["./agent"]
