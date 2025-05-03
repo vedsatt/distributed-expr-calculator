@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
 
@@ -28,7 +29,7 @@ func createTables(ctx context.Context, db *sql.DB) error {
 		usersTable = `
 	CREATE TABLE IF NOT EXISTS users(
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
-		name TEXT UNIQUE,
+		login TEXT UNIQUE,
 		password TEXT NOT NULL
 	);`
 
@@ -59,7 +60,7 @@ func NewDB() *SqlDB {
 	log.Println("Opening database connection...")
 	ctx := context.TODO()
 
-	db, err := sql.Open("sqlite3", "data/store.db")
+	db, err := sql.Open("sqlite3", "file:data/store.db?_foreign_keys=on")
 	if err != nil {
 		log.Fatalf("Failed to open database: %v", err)
 	}
@@ -87,10 +88,11 @@ func NewDB() *SqlDB {
 // создаем нового пользователя
 func (db *SqlDB) InsertUser(ctx context.Context, user *models.User) (int64, error) {
 	var q = `
-	INSERT INTO users (name, password) values ($1, $2)
+	INSERT INTO users (login, password) values ($1, $2)
 	`
 	db.usMu.Lock()
-	result, err := db.Store.ExecContext(ctx, q, user.Name, user.Password)
+	defer db.usMu.Unlock()
+	result, err := db.Store.ExecContext(ctx, q, user.Login, user.Password)
 	if err != nil {
 		return 0, err
 	}
@@ -99,7 +101,6 @@ func (db *SqlDB) InsertUser(ctx context.Context, user *models.User) (int64, erro
 	if err != nil {
 		return 0, err
 	}
-	db.usMu.Unlock()
 
 	return id, nil
 }
@@ -111,6 +112,7 @@ func (db *SqlDB) InsertExpression(ctx context.Context, expression *models.Expres
 	`
 
 	db.expMu.Lock()
+	defer db.expMu.Unlock()
 	result, err := db.Store.ExecContext(ctx, q, expression.Expression, userID, expression.Status, expression.Result)
 	if err != nil {
 		return 0, err
@@ -119,7 +121,6 @@ func (db *SqlDB) InsertExpression(ctx context.Context, expression *models.Expres
 	if err != nil {
 		return 0, err
 	}
-	db.expMu.Unlock()
 
 	return id, nil
 }
@@ -151,23 +152,11 @@ func (db *SqlDB) SelectExpressions(ctx context.Context, userID int) ([]byte, err
 	return jsonData, nil
 }
 
-// находим конкретного пользователя по айди
-func (db *SqlDB) SelectUserByID(ctx context.Context, id int) (models.User, error) {
-	u := models.User{}
-	var q = "SELECT id, name, password FROM users WHERE id = $1"
-	err := db.Store.QueryRowContext(ctx, q, id).Scan(&u.ID, &u.Name, &u.Password)
-	if err != nil {
-		return u, err
-	}
-
-	return u, nil
-}
-
 // находим конкретного пользователя по логину
 func (db *SqlDB) SelectUserByLogin(ctx context.Context, login string) (models.User, error) {
 	u := models.User{}
-	var q = "SELECT id, name, password FROM users WHERE name = $1"
-	err := db.Store.QueryRowContext(ctx, q, login).Scan(&u.ID, &u.Name, &u.Password)
+	var q = "SELECT id, login, password FROM users WHERE login = $1"
+	err := db.Store.QueryRowContext(ctx, q, login).Scan(&u.ID, &u.Login, &u.Password)
 	if err != nil {
 		return u, err
 	}
@@ -189,9 +178,18 @@ func (db *SqlDB) SelectExprByID(ctx context.Context, id int) (models.Expression,
 // обновляем результат и статус выражения по айди
 func (db *SqlDB) UpdateExpression(ctx context.Context, id int, status string, result float64) error {
 	var q = "UPDATE expressions SET status = $1, result = $2 WHERE id = $3"
-	_, err := db.Store.ExecContext(ctx, q, status, result, id)
+	res, err := db.Store.ExecContext(ctx, q, status, result, id)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("expression with id=%d not found", id)
 	}
 
 	return nil

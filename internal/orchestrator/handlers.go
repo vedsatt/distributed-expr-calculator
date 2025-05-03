@@ -129,7 +129,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	user := &models.User{
-		Name:     body.Login,
+		Login:    body.Login,
 		Password: pass,
 	}
 	_, err = db.InsertUser(ctx, user)
@@ -139,7 +139,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("user: %v has successfully registered", user.Name)
+	log.Printf("user: %v has successfully registered", user.Login)
 	w.WriteHeader(http.StatusOK)
 }
 
