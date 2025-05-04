@@ -28,21 +28,29 @@ func logsMiddleware(next http.Handler) http.Handler {
 
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			errorResponse(w, "authorization is required", http.StatusUnauthorized)
-			log.Printf("Code: %v, user unauthorized", http.StatusUnauthorized)
-			return
+		var token string
+		cookie, err := r.Cookie("jwt")
+		if checkCookie(cookie, err) {
+			token = cookie.Value
+			log.Print("token was taken from cookie")
+		} else {
+			authHeader := r.Header.Get("Authorization")
+			if authHeader == "" {
+				errorResponse(w, "authorization is required", http.StatusUnauthorized)
+				log.Printf("Code: %v, user unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			tokenParts := strings.Split(authHeader, " ")
+			if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+				errorResponse(w, "invalid token format", http.StatusUnauthorized)
+				log.Printf("Code: %v, invalid token format", http.StatusUnauthorized)
+				return
+			}
+			token = tokenParts[1]
+			log.Print("token was taken from header")
 		}
 
-		tokenParts := strings.Split(authHeader, " ")
-		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			errorResponse(w, "invalid token format", http.StatusUnauthorized)
-			log.Printf("Code: %v, invalid token format", http.StatusUnauthorized)
-			return
-		}
-
-		token := tokenParts[1]
 		claims, id := jwt.Verify(token)
 		if !claims {
 			errorResponse(w, "invalid token", http.StatusUnauthorized)
@@ -189,6 +197,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Code: %v, error with generating token", http.StatusInternalServerError)
 		return
 	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "jwt",
+		Value:    token,
+		Expires:  time.Now().Add(10 * time.Minute),
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
 	resp.Jwt = token
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
@@ -246,7 +264,7 @@ func GetDataHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var jsonData []byte
-		jsonData, err = json.Marshal(data)
+		jsonData, err = json.MarshalIndent(data, "", "  ")
 		if err != nil {
 			errorResponse(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
 			log.Printf("Code: %v, error with marshaling json", http.StatusInternalServerError)

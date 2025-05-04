@@ -48,6 +48,19 @@ var (
 	userID userid     = "user id"
 )
 
+func checkCookie(cookie *http.Cookie, err error) bool {
+	if err != nil {
+		return false
+	}
+
+	token := cookie.Value
+	if len(token) == 0 {
+		return false
+	}
+
+	return true
+}
+
 func errorResponse(w http.ResponseWriter, err string, statusCode int) {
 	w.WriteHeader(statusCode)
 	e := Error{Res: err}
