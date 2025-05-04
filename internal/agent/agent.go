@@ -29,7 +29,7 @@ func New(cfg config.Config) *Agent {
 }
 
 func (a *Agent) Run() {
-	go Connect()
+	go a.Connect()
 
 	for i := range a.config.ComputingPower {
 		log.Printf("worker %d starting...", i+1)

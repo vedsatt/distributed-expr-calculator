@@ -11,22 +11,24 @@ import (
 
 // Config представляет конфигурацию
 type Config struct {
-	TimeAddition       time.Duration // время для сложения
-	TimeSubtraction    time.Duration // время для вычитания
-	TimeMultiplication time.Duration // время для умножения
-	TimeDivision       time.Duration // время для деления
-	ComputingPower     int           // вычислительная мощность
+	TimeAddition        time.Duration // время для сложения
+	TimeSubtraction     time.Duration // время для вычитания
+	TimeMultiplication  time.Duration // время для умножения
+	TimeDivision        time.Duration // время для деления
+	ComputingPower      int           // вычислительная мощность
+	OrchestratorAddress string        // адресс для gRPC подключения к оркестратору
 }
 
 // LoadConfig загружает конфигурацию из файла .env или использует значения по умолчанию
 func LoadConfig() Config {
 	// значения по умолчанию
 	cfg := Config{
-		TimeAddition:       2000 * time.Millisecond,
-		TimeSubtraction:    2000 * time.Millisecond,
-		TimeMultiplication: 3000 * time.Millisecond,
-		TimeDivision:       3000 * time.Millisecond,
-		ComputingPower:     3,
+		TimeAddition:        2000 * time.Millisecond,
+		TimeSubtraction:     2000 * time.Millisecond,
+		TimeMultiplication:  3000 * time.Millisecond,
+		TimeDivision:        3000 * time.Millisecond,
+		ComputingPower:      3,
+		OrchestratorAddress: "localhost:5000",
 	}
 
 	// Открываем файл .env
@@ -75,6 +77,8 @@ func LoadConfig() Config {
 			if v, err := strconv.Atoi(value); err == nil && v > 0 {
 				cfg.ComputingPower = v
 			}
+		case "ORCHESTRATOR_ADDRESS":
+			cfg.OrchestratorAddress = value
 		}
 	}
 

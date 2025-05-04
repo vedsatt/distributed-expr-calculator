@@ -120,6 +120,12 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(body.Password) == 0 {
+		errorResponse(w, "password cannot be empty", http.StatusForbidden)
+		log.Printf("Code: %v, empty password", http.StatusForbidden)
+		return
+	}
+
 	pass, err := password.Generate(body.Password)
 	if err != nil {
 		errorResponse(w, "internal server error", http.StatusInternalServerError)
@@ -181,6 +187,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		errorResponse(w, "internal server error", http.StatusInternalServerError)
 		log.Printf("Code: %v, error with generating token", http.StatusInternalServerError)
+		return
 	}
 	resp.Jwt = token
 	w.WriteHeader(http.StatusOK)
@@ -222,7 +229,7 @@ func ExpressionHandler(w http.ResponseWriter, r *http.Request) {
 func GetDataHandler(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/expressions/:")
 	if checkId(id) {
-		id_int, err := strconv.Atoi(id)
+		idInt, err := strconv.Atoi(id)
 		if err != nil {
 			errStr := fmt.Sprintf("%s", err)
 			errorResponse(w, "internal server error", http.StatusInternalServerError)
@@ -230,7 +237,8 @@ func GetDataHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		data, err := db.SelectExprByID(r.Context(), id_int)
+		userId := r.Context().Value(userID)
+		data, err := db.SelectExprByID(r.Context(), idInt, userId.(int))
 		if err != nil {
 			errorResponse(w, "expression does not exist", http.StatusNotFound)
 			log.Printf("Code: %v, %s", http.StatusNotFound, err)
@@ -258,8 +266,8 @@ func GetDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	data, err := db.SelectExpressions(r.Context(), r.Context().Value(userID).(int))
 	if err != nil {
-		errorResponse(w, "empty base", http.StatusInternalServerError)
-		log.Printf("Code: %v, Internal server error", http.StatusInternalServerError)
+		errorResponse(w, "you haven't calculated any expressions yet", http.StatusInternalServerError)
+		log.Printf("Code: %v, empty base for user %v", http.StatusInternalServerError, userID)
 		return
 	}
 

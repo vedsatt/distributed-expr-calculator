@@ -122,7 +122,7 @@ func TestExpressions(t *testing.T) {
 	}
 
 	expected := testcases[1]
-	got, err := db.SelectExprByID(ctx, 2)
+	got, err := db.SelectExprByID(ctx, 2, expected.userID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -133,7 +133,7 @@ func TestExpressions(t *testing.T) {
 		t.Fatalf("test failure: expected %v, but got %v", expected.expr, got)
 	}
 
-	_, err = db.SelectExprByID(ctx, 5)
+	_, err = db.SelectExprByID(ctx, 5, 1)
 	if err == nil {
 		t.Fatal("expected error: expression with ID 5 does not exist, but got nothing")
 	}
@@ -142,7 +142,7 @@ func TestExpressions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	expr, err := db.SelectExprByID(ctx, 2)
+	expr, err := db.SelectExprByID(ctx, 2, 1)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

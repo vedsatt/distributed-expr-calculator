@@ -9,7 +9,7 @@ func Generate(s string) (string, error) {
 		return "", err
 	}
 
-	hash := string(hashedBytes[:])
+	hash := string(hashedBytes)
 	return hash, nil
 }
 

@@ -145,6 +145,14 @@ func (db *SqlDB) SelectExpressions(ctx context.Context, userID int) ([]byte, err
 		expressions = append(expressions, e)
 	}
 
+	if len(expressions) == 0 {
+		return nil, fmt.Errorf("no expressions found for user_id=%d", userID)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	jsonData, err := json.MarshalIndent(expressions, "", "  ")
 	if err != nil {
 		return nil, err
@@ -164,10 +172,10 @@ func (db *SqlDB) SelectUserByLogin(ctx context.Context, login string) (models.Us
 }
 
 // находим конкретное выражение
-func (db *SqlDB) SelectExprByID(ctx context.Context, id int) (models.Expression, error) {
+func (db *SqlDB) SelectExprByID(ctx context.Context, id, userID int) (models.Expression, error) {
 	e := models.Expression{}
-	var q = "SELECT id, expression, status, result FROM expressions WHERE id = $1"
-	err := db.Store.QueryRowContext(ctx, q, id).Scan(&e.ID, &e.Expression, &e.Status, &e.Result)
+	var q = "SELECT id, expression, status, result FROM expressions WHERE id = $1 AND user_id = $2"
+	err := db.Store.QueryRowContext(ctx, q, id, userID).Scan(&e.ID, &e.Expression, &e.Status, &e.Result)
 	if err != nil {
 		return e, err
 	}

@@ -10,10 +10,10 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func Connect() {
+func (a *Agent) Connect() {
 	for {
 		conn, err := grpc.NewClient(
-			"orchestrator:5000",
+			a.config.OrchestratorAddress,
 			grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 		if err != nil {
