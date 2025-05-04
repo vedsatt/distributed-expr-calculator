@@ -54,7 +54,7 @@ func checkCookie(cookie *http.Cookie, err error) bool {
 	}
 
 	token := cookie.Value
-	return len(token) == 0
+	return !(len(token) == 0)
 }
 
 func errorResponse(w http.ResponseWriter, err string, statusCode int) {
