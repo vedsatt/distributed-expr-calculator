@@ -233,7 +233,7 @@ curl --location 'localhost:8080/api/v1/expressions' \
 
 - **Получение выражения по его идентификатору**
 ```sh
-curl --location 'localhost:8080/api/v1/expressions/:id' \
+curl --location 'localhost:8080/api/v1/expressions/id' \
 --header 'Authorization: Bearer ваш_токен'
 ```
 **Ответ:**
@@ -485,7 +485,7 @@ curl --location 'localhost:8080/api/v1/expressions' \
 
 **Запрос:**
 ```bash
-curl --location 'localhost:8080/api/v1/expressions/:1'
+curl --location 'localhost:8080/api/v1/expressions/1'
 ```
 
 **Ответ:**
@@ -504,7 +504,7 @@ curl --location 'localhost:8080/api/v1/expressions/:1'
 
 **Запрос:**
 ```bash
-curl --location 'localhost:8080/api/v1/expressions/:5'
+curl --location 'localhost:8080/api/v1/expressions/5'
 ```
 
 **Ответ:**

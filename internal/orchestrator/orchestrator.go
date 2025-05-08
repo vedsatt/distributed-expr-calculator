@@ -24,8 +24,8 @@ type (
 		Id int `json:"id"`
 	}
 
-	Error struct {
-		Res string `json:"error"`
+	ErrorResponse struct {
+		Res string `json:"error" example:"Internal server error"`
 	}
 
 	Expression struct {
@@ -59,12 +59,16 @@ func checkCookie(cookie *http.Cookie, err error) bool {
 
 func errorResponse(w http.ResponseWriter, err string, statusCode int) {
 	w.WriteHeader(statusCode)
-	e := Error{Res: err}
+	e := ErrorResponse{Res: err}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(e)
 }
 
 func checkId(id string) bool {
+	if id == "-1" {
+		return false
+	}
+
 	pattern := "^[0-9]+$"
 	r := regexp.MustCompile(pattern)
 	return r.MatchString(id)

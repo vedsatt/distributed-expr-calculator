@@ -245,7 +245,8 @@ func ExpressionHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetDataHandler(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/api/v1/expressions/:")
+	var id string = "-1"
+	id = strings.TrimPrefix(r.URL.Path, "/api/v1/expressions/")
 	if checkId(id) {
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
@@ -289,7 +290,7 @@ func GetDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK) // устанавливаем статус 200 OK
+	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write([]byte(data))
 	if err != nil {
