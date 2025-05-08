@@ -65,7 +65,7 @@ func errorResponse(w http.ResponseWriter, err string, statusCode int) {
 }
 
 func checkId(id string) bool {
-	if id == "-1" {
+	if id == "-1" || id == "" {
 		return false
 	}
 
