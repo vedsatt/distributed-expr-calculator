@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"regexp"
-	"sync"
 
 	"github.com/vedsatt/calc_prl/pkg/database"
 )
@@ -43,7 +42,6 @@ func New() *Orchestrator {
 
 var (
 	db     *database.SqlDB
-	mu     sync.Mutex // Мьютекс для синхронизации доступа к результатам
 	ctxKey contextKey = "expression id"
 	userID userid     = "user id"
 )

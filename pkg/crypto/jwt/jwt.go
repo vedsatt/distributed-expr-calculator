@@ -16,9 +16,9 @@ func Generate(id int) (string, error) {
 	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":  id,
-		"nbf": now.Unix(),                       // когда станет валидным
-		"exp": now.Add(10 * time.Minute).Unix(), // когда перестанет быть валидным
-		"iat": now.Unix(),                       // время создания
+		"nbf": now.Unix(),                     // когда станет валидным
+		"exp": now.Add(24 * time.Hour).Unix(), // когда перестанет быть валидным
+		"iat": now.Unix(),                     // время создания
 	})
 
 	tokenString, err := token.SignedString([]byte(HmacSampleSecret))
@@ -55,7 +55,7 @@ func Verify(tokenString string) (bool, int) {
 			log.Println("invalid user ID type")
 			return false, 0
 		}
-		log.Println("user id: ", int(userID))
+		log.Println("user with id:", int(userID), "has been verified successfully")
 		return true, int(userID)
 	}
 

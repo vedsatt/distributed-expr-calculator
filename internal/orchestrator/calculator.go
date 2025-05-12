@@ -6,7 +6,6 @@ import (
 	"log"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/vedsatt/calc_prl/internal/models"
 )
@@ -100,37 +99,35 @@ func NewExpression(node *models.AstNode) *expression {
 func (e *expression) calc() (float64, error) {
 	e.fillMap(e.node)
 	var result float64
+	var err error = nil
 	for {
+		if len(e.currTasks) == 1 {
+			result, _ = strconv.ParseFloat(e.node.Value, 64)
+			break
+		}
 		// проходимся по дереву и находим ноды, у которых оба листка - числа
 		sendTasks(e.node, e.tasks, e.currTasks)
 
-		select {
-		case res := <-e.results:
-			if res.Error != "" {
-				// очищаем каналы
-				close(e.tasks)
-				close(e.results)
-
-				log.Printf("id: %v, res: %v, err: %v", res.ID, res.Result, res.Error)
-				return 0, errors.New(res.Error)
-			}
-
-			result = e.deleteAndUpdate(res)
-			log.Println("Updated tree with new result")
-		default:
-			if len(e.currTasks) == 0 {
-				return result, nil
-			}
-			time.Sleep(10 * time.Millisecond) // избегаем busy loop
+		res := <-e.results
+		if res.Error != "" {
+			result = 0
+			err = errors.New(res.Error)
+			break
 		}
+
+		result = e.deleteAndUpdate(res)
 
 		// если все задачи удалены - результат получен, а значит можно завершать функцию
 		if len(e.currTasks) == 0 {
-			close(e.tasks)
-			close(e.results)
-			return result, nil
+			break
 		}
 	}
+
+	log.Printf("Expression's channels closed successfully")
+	close(e.tasks)
+	close(e.results)
+	e.currTasks = nil
+	return result, err
 }
 
 func sendTasks(node *models.AstNode, tasks chan<- *models.AstNode, currTasks map[int]*models.AstNode) {
@@ -162,9 +159,7 @@ func (e *expression) fillMap(node *models.AstNode) {
 	}
 
 	// заполняем мапу, где ключ - айди ноды, а значение - сама нода
-	mu.Lock()
 	e.currTasks[node.ID] = node
-	mu.Unlock()
 
 	// обходим дерево методом пост-ордера
 	e.fillMap(node.Left)
