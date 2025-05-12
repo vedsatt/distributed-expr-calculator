@@ -89,8 +89,8 @@ README.md
 ### Установка
 1. Клонируйте репозиторий
 ```sh
-git clone https://github.com/vedsatt/calc_prl.git
-cd ./calc_prl
+git clone https://github.com/vedsatt/distributed-expr-calculator.git
+cd ./distributed-expr-calculator
 ```
 Установите зависимости
 ```sh

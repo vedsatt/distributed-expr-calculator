@@ -5,8 +5,8 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
-RUN go mod download
+COPY go.mod ./
+RUN go mod tidy && go mod download
 
 
 COPY . .
